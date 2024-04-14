@@ -1,0 +1,11 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<RevitAddIns>
+	<AddIn Type="Application">
+		<Name>CWO App</Name>
+		<Assembly>CWO_App\CWO_App.dll</Assembly>
+		<FullClassName>CWO_App.Application</FullClassName>
+		<AddInId>3124EB6E-8BAC-4F27-8F95-22ECCB843944</AddInId>
+		<VendorId>CWOArchitects</VendorId>
+		<VendorDescription>Contact Om @ obhagwat@cwoarchitects.ie, http://example.com/test</VendorDescription>
+	</AddIn>
+</RevitAddIns>

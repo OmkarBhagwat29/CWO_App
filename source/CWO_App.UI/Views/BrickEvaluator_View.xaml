@@ -1,0 +1,80 @@
+﻿<Window x:Class="CWO_App.UI.Views.BrickEvaluator_View"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        xmlns:viewModel="clr-namespace:CWO_App.UI.ViewModels"
+        d:DataContext="{d:DesignInstance viewModel:BrickEvaluator_ViewModel}"
+        Title="Brick Tag Generator"
+        Height="auto" 
+        Width="auto"
+        ResizeMode="NoResize"
+        SizeToContent="WidthAndHeight">
+
+    <Window.Resources>
+        <!-- Merge the resource dictionary containing the custom button style -->
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="../Styles/ButtonStyles.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Window.Resources>
+
+    <Grid Margin="5">
+
+        <Grid.RowDefinitions>
+            <RowDefinition Height="40"/>
+            <RowDefinition Height="90"/>
+            <RowDefinition Height="50"/>
+            <RowDefinition/>
+            <RowDefinition/>
+        </Grid.RowDefinitions>
+        <Label Content="Brick Tags Generator"
+               Margin="0,0,0,0"
+               FontSize="18"
+               Background="LightGreen"
+               Foreground="Black"
+               VerticalAlignment="Center"/>
+
+        <StackPanel Grid.Row="1"
+                    Orientation="Vertical"
+                    Margin="0,10,0,0">
+            <Label Content="Dimension Type"
+                   FontSize="14"/>
+            <ComboBox Margin="5,0,20,0"
+                  SelectedItem="{Binding SelectedDimensionType}"
+                  ItemsSource="{Binding DimensionTypes}"/>
+
+        </StackPanel>
+
+        <StackPanel Grid.Row="2"
+                    Orientation="Horizontal">
+
+            <!-- Apply the custom button style to your button -->
+            <Button Margin="5"
+                    BorderThickness="0"
+                    Width="70" Height="40"
+                    Style="{StaticResource CustomButtonStyle}"
+                    Command="{Binding SelectDimensionsCommand}">
+                <StackPanel HorizontalAlignment="Center"
+                            VerticalAlignment="Center">
+                    <TextBlock Text="     Select"/>
+                    <TextBlock Text="Dimensions"/>
+                </StackPanel>
+            </Button>
+            
+
+                <TextBox Margin="0,5,0,0"
+                    FontSize="10" Foreground="DarkGray"
+                         BorderThickness="0"
+                TextWrapping="Wrap" 
+                 Height="43"     
+               Text="Note. User will only able to select dimensions of Selected Dimnsion Type above" Width="198"/>
+
+            
+
+        </StackPanel>
+
+    </Grid>
+</Window>

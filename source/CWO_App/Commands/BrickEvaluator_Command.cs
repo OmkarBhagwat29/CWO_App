@@ -5,9 +5,10 @@
 using Autodesk.Revit.Attributes;
 using Autodesk.Revit.UI;
 using CWO_App.UI.Commands;
+using CWO_App.UI.ViewModels;
 using Nice3point.Revit.Toolkit.External;
 using RevitCore.Utils;
-using Serilog.Core;
+using RevitCore.Extensions;
 using System.Reflection;
 
 namespace CWO_App.Commands
@@ -19,7 +20,6 @@ namespace CWO_App.Commands
     [Transaction(TransactionMode.Manual)]
     public class BrickEvaluator_Command : ExternalCommand
     {
-
         public override void Execute()
         {
 			try
@@ -30,7 +30,7 @@ namespace CWO_App.Commands
                 var doc = uiDoc.Document;
 
                 Host.GetService<BrickEvaluatorShowWindow>().Execute();
-			}
+            }
 			catch
 			{
                 

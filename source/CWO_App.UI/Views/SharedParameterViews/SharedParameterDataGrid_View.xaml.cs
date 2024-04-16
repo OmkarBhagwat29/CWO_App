@@ -70,16 +70,6 @@ DependencyProperty.Register("DataGridHeight", typeof(double), typeof(SharedParam
             set { SetValue(ItemsSourceProperty, value); }
         }
 
-
-        public static readonly DependencyProperty IsAllSelectedProperty =
-    DependencyProperty.Register("IsAllSelected", typeof(bool), typeof(SharedParameterDataGrid_View), new PropertyMetadata(false));
-
-        public bool IsAllSelected
-        {
-            get { return (bool)GetValue(IsAllSelectedProperty); }
-            set { SetValue(IsAllSelectedProperty, value); }
-        }
-
         public SharedParameterDataGrid_View()
         {
             InitializeComponent();

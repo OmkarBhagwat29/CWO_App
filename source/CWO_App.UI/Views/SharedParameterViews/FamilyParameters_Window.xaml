@@ -45,8 +45,6 @@
                 ColumnHeader_3="Paraeter Name"
                 ItemsSource="{Binding SharedParametersData,
                 Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                IsAllSelected="{Binding AllParametersSelected,Mode=TwoWay,
-                UpdateSourceTrigger=PropertyChanged}"
                 VerticalAlignment="Top"
                 HorizontalAlignment="Center"/>
 

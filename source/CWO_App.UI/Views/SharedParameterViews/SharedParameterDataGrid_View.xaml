@@ -17,9 +17,11 @@
                  Width="{Binding DataGridWidth, RelativeSource={RelativeSource AncestorType=UserControl}}"
                   Height="{Binding DataGridHeight, RelativeSource={RelativeSource AncestorType=UserControl}}"
                   Background="White">
+
+
             <DataGrid.Columns>
                 <!-- Column 1 -->
-                <DataGridCheckBoxColumn Width="50">
+                <!--<DataGridCheckBoxColumn Width="50">
 
                     <DataGridCheckBoxColumn.HeaderStyle>
                         <Style TargetType="{x:Type DataGridColumnHeader}">
@@ -38,10 +40,37 @@
                         </Style>
                     </DataGridCheckBoxColumn.ElementStyle>
 
-                </DataGridCheckBoxColumn>
-                
+                </DataGridCheckBoxColumn>-->
+
+                <DataGridTemplateColumn
+                    Width="50"
+                    MinWidth="50"
+                    Header="Select"
+                    CanUserReorder="False"
+                    CanUserResize="True">
+
+                    <DataGridTemplateColumn.CellTemplate>
+
+                        <DataTemplate>
+
+                            <CheckBox IsChecked="False">
+                            </CheckBox>
+
+                        </DataTemplate>
+
+                    </DataGridTemplateColumn.CellTemplate>
+
+                </DataGridTemplateColumn>
+
+
+
                 <!-- Column 2 -->
-                <DataGridTextColumn Binding="{Binding ParameterGroup}" Width="*">
+                <DataGridTextColumn Binding="{Binding ParameterGroup}"
+                                    Width="*"
+                                 ScrollViewer.CanContentScroll="True" 
+                                ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                ScrollViewer.HorizontalScrollBarVisibility="Hidden"
+                                IsReadOnly="True" >
 
                     <DataGridTextColumn.HeaderStyle>
                         <Style TargetType="{x:Type DataGridColumnHeader}">
@@ -49,7 +78,8 @@
                         </Style>
                     </DataGridTextColumn.HeaderStyle>
                     <DataGridTextColumn.Header>
-                        <TextBlock Text="{Binding ColumnHeader_2, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
+                        <TextBlock Text="{Binding ColumnHeader_2,
+                            RelativeSource={RelativeSource AncestorType=UserControl}}"/>
                     </DataGridTextColumn.Header>
                     
                     <DataGridTextColumn.ElementStyle>
@@ -60,7 +90,11 @@
                 </DataGridTextColumn>
 
                 <!-- Column 3 -->
-                <DataGridTextColumn Binding="{Binding ParameterName}" Width="*">
+                <DataGridTextColumn Binding="{Binding ParameterName}" Width="*"
+                                ScrollViewer.CanContentScroll="True" 
+                                ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                ScrollViewer.HorizontalScrollBarVisibility="Hidden"
+                                IsReadOnly="True">
                     
                     <DataGridTextColumn.HeaderStyle>
                         <Style TargetType="{x:Type DataGridColumnHeader}">

@@ -54,9 +54,7 @@
                   Background="White">
                 <DataGrid.Columns>
                     <!-- Column 1 -->
-                    <DataGridCheckBoxColumn Width="50" Binding="{Binding IsSelected,
-                        RelativeSource={RelativeSource AncestorType=UserControl},
-                        Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}">
+                    <DataGridCheckBoxColumn Width="50">
 
                         <DataGridCheckBoxColumn.Header>
                             <CheckBox Content="All"/>
@@ -69,11 +67,14 @@
                                 <Setter Property="HorizontalAlignment" Value="Center"/>
                             </Style>
                         </DataGridCheckBoxColumn.ElementStyle>
-                        <!--<DataGridCheckBoxColumn.HeaderStyle>
+                        <DataGridCheckBoxColumn.HeaderStyle>
                             <Style TargetType="{x:Type DataGridColumnHeader}">
                                 <Setter Property="HorizontalAlignment" Value="Center"/>
                             </Style>
-                        </DataGridCheckBoxColumn.HeaderStyle>-->
+                        </DataGridCheckBoxColumn.HeaderStyle>
+                        <DataGridCheckBoxColumn.Binding>
+                            <Binding Path="IsSelected" RelativeSource="{RelativeSource AncestorType=UserControl}" Mode="TwoWay"/>
+                        </DataGridCheckBoxColumn.Binding>
                     </DataGridCheckBoxColumn>
 
                     <!-- Column 2 -->
@@ -86,6 +87,11 @@
                         <DataGridTextColumn.Header>
                             <TextBlock Text="{Binding ColumnHeader_2, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
                         </DataGridTextColumn.Header>
+                        <DataGridTextColumn.ElementStyle>
+                            <Style TargetType="{x:Type TextBlock}">
+                                <Setter Property="TextAlignment" Value="Center"/>
+                            </Style>
+                        </DataGridTextColumn.ElementStyle>
                     </DataGridTextColumn>
 
                     <!-- Column 3 -->
@@ -98,6 +104,11 @@
                         <DataGridTextColumn.Header>
                             <TextBlock Text="{Binding ColumnHeader_3, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
                         </DataGridTextColumn.Header>
+                        <DataGridTextColumn.ElementStyle>
+                            <Style TargetType="{x:Type TextBlock}">
+                                <Setter Property="TextAlignment" Value="Center"/>
+                            </Style>
+                        </DataGridTextColumn.ElementStyle>
                     </DataGridTextColumn>
                 </DataGrid.Columns>
             </DataGrid>

@@ -46,6 +46,10 @@
                 TextBoxWidth="250"
                 ColumnHeader_2="Parameter Group"
                 ColumnHeader_3="Paraeter Name"
+                ItemsSource="{Binding SharedParametersData, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                ButtonCommand="{Binding SelectSharedParameterFileCommand}"
+                FileFolderPath="{Binding SharedParameterFilePath}"
+                
                 VerticalAlignment="Top"
                 HorizontalAlignment="Center"/>
 
@@ -84,7 +88,9 @@
                 TextBoxWidth="165"
                 ColumnHeader_2="Family"
                 ColumnHeader_3="Category"
-            VerticalAlignment="Top"
+                ItemsSource="{Binding FamiliesData, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                ButtonCommand="{Binding SelectFamilyFolderCommand}"
+                VerticalAlignment="Top"
             HorizontalAlignment="Center"/>
 
         </Grid>

@@ -24,7 +24,7 @@
 
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="1.30*"/>
+            <ColumnDefinition Width="*"/>
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
@@ -33,23 +33,20 @@
 
             <Grid.RowDefinitions>
                 <RowDefinition Height="400"/>
-
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
 
 
             <local:SharedParameterDataGrid_View
                 Margin="0,0,0,10"
-                DataGridWidth="400"
+                DataGridWidth="350"
                 DataGridHeight="390"
-                Text="Parameter File"
-                TextBoxWidth="250"
                 ColumnHeader_2="Parameter Group"
                 ColumnHeader_3="Paraeter Name"
-                ItemsSource="{Binding SharedParametersData, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                ButtonCommand="{Binding SelectSharedParameterFileCommand}"
-                FileFolderPath="{Binding SharedParameterFilePath}"
-                
+                ItemsSource="{Binding SharedParametersData,
+                Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                IsAllSelected="{Binding AllParametersSelected,Mode=TwoWay,
+                UpdateSourceTrigger=PropertyChanged}"
                 VerticalAlignment="Top"
                 HorizontalAlignment="Center"/>
 
@@ -80,21 +77,16 @@
 
         </Grid>
 
-        <Grid Grid.Column="1">
+        <!--<Grid Grid.Column="1">
             <local:SharedParameterDataGrid_View 
-                DataGridWidth="300"
-                DataGridHeight="400"
-                Text="Family Folder"
-                TextBoxWidth="165"
+                DataGridWidth="350"
+                DataGridHeight="450"
                 ColumnHeader_2="Family"
                 ColumnHeader_3="Category"
                 ItemsSource="{Binding FamiliesData, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                ButtonCommand="{Binding SelectFamilyFolderCommand}"
                 VerticalAlignment="Top"
             HorizontalAlignment="Center"/>
 
-        </Grid>
-
-
+        </Grid>-->
     </Grid>
 </Window>

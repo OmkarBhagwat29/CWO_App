@@ -8,115 +8,77 @@
              Background="white"
              d:DesignHeight="400" d:DesignWidth="400">
 
-    <UserControl.Resources>
-
-        <!-- Merge the resource dictionary containing the custom button style -->
-        <ResourceDictionary>
-            <ResourceDictionary.MergedDictionaries>
-                <ResourceDictionary Source="../../Styles/ButtonStyles.xaml"/>
-            </ResourceDictionary.MergedDictionaries>
-        </ResourceDictionary>
-    </UserControl.Resources>
-    
     <Grid>
-
-        <Grid.RowDefinitions>
-            <RowDefinition Height="40"/>
-            <RowDefinition Height="Auto"/>
-        </Grid.RowDefinitions>
-
-        <!-- Shared Parameter File TextBox and Select File Button -->
-        <StackPanel Orientation="Horizontal" Margin="5">
-            <TextBlock Text="{Binding Text, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                       VerticalAlignment="Center"/>
-            <TextBox Width="{Binding TextBoxWidth, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                     Margin="5" IsReadOnly="True"
-                     Text="{Binding FileFolderPath, RelativeSource={RelativeSource AncestorType=UserControl},
-                UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"/>
-            <Button 
-                   Margin="5,0,0,0"
-                   HorizontalAlignment="Center"
-                   BorderThickness="0"
-                   Width="50" Height="30"
-                   Content="Select"
-                   Style="{StaticResource CustomButtonStyle}"
-                    Command="{Binding ButtonCommand, RelativeSource={RelativeSource AncestorType=UserControl}}">
-            </Button>
-        </StackPanel>
-
-        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
-
-            <DataGrid Name="dataGrid"
-                ItemsSource="{Binding ItemsSource, RelativeSource={RelativeSource AncestorType=UserControl}}"
+        <DataGrid Name="dataGrid" VerticalScrollBarVisibility="Auto"
+                ItemsSource="{Binding ItemsSource,
+            RelativeSource={RelativeSource AncestorType=UserControl},Mode=TwoWay,
+            UpdateSourceTrigger=PropertyChanged}"
                   AutoGenerateColumns="False"
                  Width="{Binding DataGridWidth, RelativeSource={RelativeSource AncestorType=UserControl}}"
                   Height="{Binding DataGridHeight, RelativeSource={RelativeSource AncestorType=UserControl}}"
                   Background="White">
-                <DataGrid.Columns>
-                    <!-- Column 1 -->
-                    <DataGridCheckBoxColumn Width="50">
+            <DataGrid.Columns>
+                <!-- Column 1 -->
+                <DataGridCheckBoxColumn Width="50">
 
-                        <DataGridCheckBoxColumn.Header>
-                            <CheckBox Content="All"/>
-                            <!--Checked="{Binding CheckBoxCheckedEvent, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                               Unchecked="{Binding CheckBoxUncheckedEvent, RelativeSource={RelativeSource AncestorType=UserControl}}"-->
-                        </DataGridCheckBoxColumn.Header>
-                        
-                        <DataGridCheckBoxColumn.ElementStyle>
-                            <Style TargetType="{x:Type CheckBox}">
-                                <Setter Property="HorizontalAlignment" Value="Center"/>
-                            </Style>
-                        </DataGridCheckBoxColumn.ElementStyle>
-                        <DataGridCheckBoxColumn.HeaderStyle>
-                            <Style TargetType="{x:Type DataGridColumnHeader}">
-                                <Setter Property="HorizontalAlignment" Value="Center"/>
-                            </Style>
-                        </DataGridCheckBoxColumn.HeaderStyle>
-                        <DataGridCheckBoxColumn.Binding>
-                            <Binding Path="IsSelected" RelativeSource="{RelativeSource AncestorType=UserControl}" Mode="TwoWay"/>
-                        </DataGridCheckBoxColumn.Binding>
-                    </DataGridCheckBoxColumn>
+                    <DataGridCheckBoxColumn.HeaderStyle>
+                        <Style TargetType="{x:Type DataGridColumnHeader}">
+                            <Setter Property="HorizontalAlignment" Value="Center"/>
+                        </Style>
+                    </DataGridCheckBoxColumn.HeaderStyle>
+                    <DataGridCheckBoxColumn.Header>
+                        <CheckBox Content=""
+                        IsChecked="{Binding IsAllSelected, RelativeSource={RelativeSource AncestorType=UserControl},
+                            Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                    </DataGridCheckBoxColumn.Header>
 
-                    <!-- Column 2 -->
-                    <DataGridTextColumn Binding="{Binding ParameterGroup}" Width="*">
-                        <DataGridTextColumn.HeaderStyle>
-                            <Style TargetType="{x:Type DataGridColumnHeader}">
-                                <Setter Property="HorizontalAlignment" Value="Center"/>
-                            </Style>
-                        </DataGridTextColumn.HeaderStyle>
-                        <DataGridTextColumn.Header>
-                            <TextBlock Text="{Binding ColumnHeader_2, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
-                        </DataGridTextColumn.Header>
-                        <DataGridTextColumn.ElementStyle>
-                            <Style TargetType="{x:Type TextBlock}">
-                                <Setter Property="TextAlignment" Value="Center"/>
-                            </Style>
-                        </DataGridTextColumn.ElementStyle>
-                    </DataGridTextColumn>
+                    <DataGridCheckBoxColumn.ElementStyle>
+                        <Style TargetType="{x:Type CheckBox}">
+                            <Setter Property="HorizontalAlignment" Value="Center"/>
+                        </Style>
+                    </DataGridCheckBoxColumn.ElementStyle>
 
-                    <!-- Column 3 -->
-                    <DataGridTextColumn Binding="{Binding ParameterGroup}" Width="*">
-                        <DataGridTextColumn.HeaderStyle>
-                            <Style TargetType="{x:Type DataGridColumnHeader}">
-                                <Setter Property="HorizontalAlignment" Value="Center"/>
-                            </Style>
-                        </DataGridTextColumn.HeaderStyle>
-                        <DataGridTextColumn.Header>
-                            <TextBlock Text="{Binding ColumnHeader_3, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
-                        </DataGridTextColumn.Header>
-                        <DataGridTextColumn.ElementStyle>
-                            <Style TargetType="{x:Type TextBlock}">
-                                <Setter Property="TextAlignment" Value="Center"/>
-                            </Style>
-                        </DataGridTextColumn.ElementStyle>
-                    </DataGridTextColumn>
-                </DataGrid.Columns>
-            </DataGrid>
+                </DataGridCheckBoxColumn>
+                
+                <!-- Column 2 -->
+                <DataGridTextColumn Binding="{Binding ParameterGroup}" Width="*">
 
+                    <DataGridTextColumn.HeaderStyle>
+                        <Style TargetType="{x:Type DataGridColumnHeader}">
+                            <Setter Property="HorizontalAlignment" Value="Center"/>
+                        </Style>
+                    </DataGridTextColumn.HeaderStyle>
+                    <DataGridTextColumn.Header>
+                        <TextBlock Text="{Binding ColumnHeader_2, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
+                    </DataGridTextColumn.Header>
+                    
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="{x:Type TextBlock}">
+                            <Setter Property="TextAlignment" Value="Center"/>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
 
-        </ScrollViewer>
-
-
-
+                <!-- Column 3 -->
+                <DataGridTextColumn Binding="{Binding ParameterName}" Width="*">
+                    
+                    <DataGridTextColumn.HeaderStyle>
+                        <Style TargetType="{x:Type DataGridColumnHeader}">
+                            <Setter Property="HorizontalAlignment" Value="Center"/>
+                        </Style>
+                    </DataGridTextColumn.HeaderStyle>
+                    
+                    <DataGridTextColumn.Header>
+                        <TextBlock Text="{Binding ColumnHeader_3, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
+                    </DataGridTextColumn.Header>
+                    
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="{x:Type TextBlock}">
+                            <Setter Property="TextAlignment" Value="Center"/>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
+            </DataGrid.Columns>
+        </DataGrid>
     </Grid>
 </UserControl>

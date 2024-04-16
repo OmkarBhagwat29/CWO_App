@@ -1,4 +1,6 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using CWO_App.UI.Models;
+using CWO_App.UI.Services;
+using Microsoft.Extensions.Logging;
 using Microsoft.Win32;
 using Nice3point.Revit.Toolkit.External.Handlers;
 using System;
@@ -11,50 +13,70 @@ using System.Threading.Tasks;
 
 namespace CWO_App.UI.ViewModels.SharedParametersViewModels
 {
-    public sealed partial class FamilyParameters_ViewModel(ILogger<FamilyParameters_ViewModel> logger) : ObservableObject
+    public sealed partial class FamilyParameters_ViewModel: ObservableObject
     {
+        private readonly ILogger _logger;
+        public IWindowService WindowService;
+
         private readonly ActionEventHandler _externalHandler = new();
         private readonly AsyncEventHandler _asyncExternalHandler = new();
         private readonly AsyncEventHandler<ElementId> _asyncIdExternalHandler = new();
+
+        private FamilyParametersModel _model;
 
         private string lastOpenedFolder = "";
 
         [ObservableProperty] private ObservableCollection<SharedParameterDataRow> _sharedParametersData = [];
         [ObservableProperty] private ObservableCollection<FamilyDataGridRow> _familiesData = [];
 
-        [ObservableProperty] private string _sharedParameterFilePath;
 
+        [ObservableProperty]
+        private bool _allParametersSelected;
 
-        [RelayCommand]
-        private void SelectSharedParameterFile()
+        public FamilyParameters_ViewModel(ILogger<FamilyParameters_ViewModel> logger, IWindowService windowService)
         {
-            OpenFileDialog openFileDialog = new OpenFileDialog();
-            openFileDialog.Filter = "Text file (*.txt)|*.txt";
-            openFileDialog.Multiselect = false;
+            _logger = logger;
+            WindowService = windowService;
 
-            if (!string.IsNullOrEmpty(lastOpenedFolder))
+            // Subscribe to the WindowOpened event
+            WindowService.WindowOpened += OnWindowOpened;
+        }
+
+        partial void OnAllParametersSelectedChanged(bool oldValue, bool newValue)
+        {
+            foreach (var item in this.SharedParametersData)
             {
-                openFileDialog.InitialDirectory = lastOpenedFolder;
+                item.IsSelected = oldValue;
             }
-
-            bool? result = openFileDialog.ShowDialog();
-
-            if (!(bool)result)
-                return;
-
-
-            // Get the selected file name and store the folder path
-            this.SharedParameterFilePath = openFileDialog.FileName;
-            lastOpenedFolder = Path.GetDirectoryName(this.SharedParameterFilePath);
-
-            //get shared param info
-            
         }
 
-        [RelayCommand]
-        private void SelectFamilyFolder()
+        private void OnWindowOpened(object sender, EventArgs e)
         {
+            //get shared parameters 
+            _externalHandler.Raise((uiApp) =>
+            {
+                var app = uiApp.Application;
+                var definitionFile = app.OpenSharedParameterFile();
+                if (definitionFile == null)
+                {
+                    _logger.LogInformation("NO shared parameter file found in the Project");
+                    return;
+                }
+                
+                _model = new FamilyParametersModel(definitionFile);
+                _model.SetParameters();
 
+                this.SharedParametersData.Clear();
+                _model.AllParameters
+                .ForEach(d => this.SharedParametersData.Add(new SharedParameterDataRow()
+                {
+                    IsSelected = true,
+                    ParameterGroup = d.groupName,
+                    ParameterName = d.parameterName
+                }));
+
+            });
         }
+
     }
 }

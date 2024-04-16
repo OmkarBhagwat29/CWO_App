@@ -23,17 +23,6 @@ namespace CWO_App.UI.Views.SharedParameterViews
     /// </summary>
     public partial class SharedParameterDataGrid_View : UserControl
     {
-        // Define a dependency property for the Text property of the TextBlock
-        public static readonly DependencyProperty TextProperty =
-            DependencyProperty.Register("Text", typeof(string),
-                typeof(SharedParameterDataGrid_View), new PropertyMetadata("Shared Parameter File"));
-
-        // Property to get/set the value of the dependency property
-        public string Text
-        {
-            get { return (string)GetValue(TextProperty); }
-            set { SetValue(TextProperty, value); }
-        }
 
         public static readonly DependencyProperty DataGridWidthProperty =
     DependencyProperty.Register("DataGridWidth", typeof(double), typeof(SharedParameterDataGrid_View), new PropertyMetadata(400.0));
@@ -53,17 +42,6 @@ DependencyProperty.Register("DataGridHeight", typeof(double), typeof(SharedParam
             set { SetValue(DataGridHeightProperty, value); }
         }
 
-
-        // Define a dependency property for the Width property of the TextBox
-        public static readonly DependencyProperty TextBoxWidthProperty =
-            DependencyProperty.Register("TextBoxWidth", typeof(double), typeof(SharedParameterDataGrid_View), new PropertyMetadata(200.0));
-
-        // Property to get/set the value of the dependency property
-        public double TextBoxWidth
-        {
-            get { return (double)GetValue(TextBoxWidthProperty); }
-            set { SetValue(TextBoxWidthProperty, value); }
-        }
 
         public static readonly DependencyProperty ColumnHeader_2Property =
             DependencyProperty.Register("ColumnHeader_2", typeof(string), typeof(SharedParameterDataGrid_View), new PropertyMetadata("Group"));
@@ -92,66 +70,23 @@ DependencyProperty.Register("DataGridHeight", typeof(double), typeof(SharedParam
             set { SetValue(ItemsSourceProperty, value); }
         }
 
-        public static readonly DependencyProperty ButtonCommandProperty =
-    DependencyProperty.Register("ButtonCommand", typeof(ICommand), typeof(SharedParameterDataGrid_View), new PropertyMetadata(null));
 
-        public ICommand ButtonCommand
+        public static readonly DependencyProperty IsAllSelectedProperty =
+    DependencyProperty.Register("IsAllSelected", typeof(bool), typeof(SharedParameterDataGrid_View), new PropertyMetadata(false));
+
+        public bool IsAllSelected
         {
-            get { return (ICommand)GetValue(ButtonCommandProperty); }
-            set { SetValue(ButtonCommandProperty, value); }
+            get { return (bool)GetValue(IsAllSelectedProperty); }
+            set { SetValue(IsAllSelectedProperty, value); }
         }
-
-        public static readonly DependencyProperty FileFolderPathProperty =
-            DependencyProperty.Register("FileFolderPath", typeof(string), typeof(SharedParameterDataGrid_View), new PropertyMetadata(string.Empty));
-
-        public string FileFolderPath
-        {
-            get { return (string)GetValue(FileFolderPathProperty); }
-            set { SetValue(FileFolderPathProperty, value); }
-        }
-
-        public static readonly DependencyProperty IsSelectedProperty =
-    DependencyProperty.Register("IsSelected", typeof(string), typeof(SharedParameterDataGrid_View), new PropertyMetadata(string.Empty));
-
-        public string IsSelected
-        {
-            get { return (string)GetValue(IsSelectedProperty); }
-            set { SetValue(IsSelectedProperty, value); }
-        }
-
-    //    public static readonly DependencyProperty CheckBoxCheckedEventProperty =
-    //DependencyProperty.Register("CheckBoxCheckedEvent", typeof(RoutedEventHandler), typeof(SharedParameterDataGrid_View));
-
-    //    public static readonly DependencyProperty CheckBoxUncheckedEventProperty =
-    //        DependencyProperty.Register("CheckBoxUncheckedEvent", typeof(RoutedEventHandler), typeof(SharedParameterDataGrid_View));
-
-    //    public event RoutedEventHandler CheckBoxCheckedEvent
-    //    {
-    //        add { AddHandler(CheckBox.CheckedEvent, value); }
-    //        remove { RemoveHandler(CheckBox.CheckedEvent, value); }
-    //    }
-
-    //    public event RoutedEventHandler CheckBoxUncheckedEvent
-    //    {
-    //        add { AddHandler(CheckBox.UncheckedEvent, value); }
-    //        remove { RemoveHandler(CheckBox.UncheckedEvent, value); }
-    //    }
 
         public SharedParameterDataGrid_View()
         {
             InitializeComponent();
             this.dataGrid.BorderBrush = new SolidColorBrush(Colors.Black);
             this.dataGrid.BorderThickness = new Thickness(1);
+
         }
 
-        //private void CheckBox_SelectAll_Checked(object sender, RoutedEventArgs e)
-        //{
-        //    // Handle the checked event
-        //}
-
-        //private void CheckBox_SelectAll_Unchecked(object sender, RoutedEventArgs e)
-        //{
-        //    // Handle the unchecked event
-        //}
     }
 }

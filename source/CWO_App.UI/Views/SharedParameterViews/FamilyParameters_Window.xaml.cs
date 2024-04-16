@@ -1,4 +1,5 @@
-﻿using CWO_App.UI.ViewModels.SharedParametersViewModels;
+﻿using CWO_App.UI.Services;
+using CWO_App.UI.ViewModels.SharedParametersViewModels;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -20,10 +21,20 @@ namespace CWO_App.UI.Views.SharedParameterViews
     /// </summary>
     public partial class FamilyParameters_Window : Window
     {
+        private readonly IWindowService _windowService;
         public FamilyParameters_Window(FamilyParameters_ViewModel vm)
         {
             InitializeComponent();
             DataContext = vm;
+
+            _windowService = vm.WindowService;
+
+            Loaded += FamilyParameters_View_Loaded;
+        }
+
+        private void FamilyParameters_View_Loaded(object sender, RoutedEventArgs e)
+        {
+            _windowService.RaiseWindowOpened();
         }
     }
 }

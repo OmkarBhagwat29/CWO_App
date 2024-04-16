@@ -37,7 +37,7 @@ namespace CWO_App
             builder.Services.AddSerializerOptions();
 
             //add here services like views and VM
-            //builder.Services.AddTransient<IWindowService, WindowService>();
+             builder.Services.AddTransient<IWindowService, WindowService>();
             //builder.Services.AddTransient<BrickEvaluatorShowWindow>(); 
             //builder.Services.AddTransient<BrickEvaluator_View>();
             //builder.Services.AddTransient<BrickEvaluator_ViewModel>();

@@ -9,7 +9,7 @@
         mc:Ignorable="d"
         ResizeMode="NoResize"
         Title="Family Parameters"
-        Height="500" Width="750">
+        Height="500" Width="800">
 
 
     <Window.Resources>
@@ -24,7 +24,7 @@
 
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="450"/>
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
@@ -32,23 +32,98 @@
         <Grid Grid.Column="0">
 
             <Grid.RowDefinitions>
-                <RowDefinition Height="400"/>
+                <RowDefinition Height="50"/>
                 <RowDefinition Height="*"/>
+                <RowDefinition Height="50"/>
             </Grid.RowDefinitions>
 
+            <StackPanel Orientation="Horizontal"
+                        VerticalAlignment="Center">
+                <Label 
+                   Content="Group:"/>
 
-            <local:SharedParameterDataGrid_View
-                Margin="0,0,0,10"
-                DataGridWidth="350"
-                DataGridHeight="390"
-                ColumnHeader_2="Parameter Group"
-                ColumnHeader_3="Paraeter Name"
-                ItemsSource="{Binding SharedParametersData,
-                Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                VerticalAlignment="Top"
-                HorizontalAlignment="Center"/>
+                <ComboBox 
+                 MinWidth="150"
+                 ItemsSource="{Binding GroupNames}"
+                 SelectedItem="{Binding SelectedGroupName, Mode=TwoWay}"
+                 ToolTip="Filtering will not deselect any items selected before the filtering was enabled">
 
-            <StackPanel Grid.Row="1" Width="400"
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding}" HorizontalAlignment="Center" FontSize="14"/>
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+
+                </ComboBox>
+                
+
+                <Label 
+                    Margin="20,0,0,0"
+                    Content="Search:"
+                    VerticalAlignment="Center"/>
+
+                <TextBox 
+                    Height="30"
+                    Width="180"
+                    Margin="0,0,10,0"
+                    FontSize="14"
+                    Text ="{Binding Path=ParameterNameSearchString,
+                    UpdateSourceTrigger=PropertyChanged}"
+                    ToolTip="The Searchbox will not deselect any items selected before the filtering was enabled"
+                    TextAlignment="Center"/>
+
+            </StackPanel>
+
+            <DataGrid x:Name="DataGridParameters"
+                      Margin="5"
+                      Grid.Row="1"
+                      Grid.Column="0"
+                      ItemsSource="{Binding SearchStringParameterFilterCollection.View}"
+                      AutoGenerateColumns="False"
+                      BorderBrush="LightGray"
+                      CanUserAddRows="False"
+                      BorderThickness="1"
+                      Background="White">
+
+                <DataGrid.Columns>
+                    <DataGridTemplateColumn
+                        Width="50"
+                        MinWidth="50"
+                        Header="Select"
+                        CanUserReorder="False"
+                        CanUserResize="true">
+
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <CheckBox IsChecked="{Binding IsSelected,UpdateSourceTrigger=PropertyChanged}">
+
+                                </CheckBox>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+
+                    <DataGridTextColumn Header="Parameter Group"
+                                        Binding="{Binding ParameterGroup}"
+                                        Width="*"
+                                        ScrollViewer.CanContentScroll="True"
+                                        ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                        ScrollViewer.HorizontalScrollBarVisibility="Hidden"
+                                        IsReadOnly="True">
+
+                    </DataGridTextColumn>
+
+                    <DataGridTextColumn Header="Parameter Name"
+                                        Width="*"
+                                        Binding="{Binding ParameterName}"
+                                        IsReadOnly="True">
+
+                    </DataGridTextColumn>
+
+                </DataGrid.Columns>
+
+            </DataGrid>
+
+            <StackPanel Grid.Row="2" Width="400"
                     Orientation="Horizontal">
 
                 <Button 
@@ -58,7 +133,7 @@
                     Width="50" Height="30"
                     Content="Apply"
                     Style="{StaticResource CustomButtonStyle}"
-                    Command="{Binding SelectDimensionsCommand}">
+                    Command="{Binding ApplyParametersCommand}">
                 </Button>
 
                 <Button 
@@ -68,23 +143,105 @@
                     Width="50" Height="30"
                     Content="Delete"
                     Style="{StaticResource CustomButtonStyle}"
-                    Command="{Binding SelectDimensionsCommand}">
+                    Command="{Binding DeleteParametersCommand}">
                 </Button>
 
             </StackPanel>
 
         </Grid>
 
-        <!--<Grid Grid.Column="1">
-            <local:SharedParameterDataGrid_View 
-                DataGridWidth="350"
-                DataGridHeight="450"
-                ColumnHeader_2="Family"
-                ColumnHeader_3="Category"
-                ItemsSource="{Binding FamiliesData, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                VerticalAlignment="Top"
-            HorizontalAlignment="Center"/>
+        <Grid Grid.Column="1">
 
-        </Grid>-->
+            <Grid.RowDefinitions>
+                <RowDefinition Height="50"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="10"/>
+            </Grid.RowDefinitions>
+
+            <StackPanel Orientation="Horizontal"
+                        VerticalAlignment="Center">
+
+                <Button 
+                    Margin="5,0,0,0"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                    BorderThickness="0"
+                    Width="75" Height="30"
+                    Content="Select Folder"
+                    Style="{StaticResource CustomButtonStyle}"
+                    Command="{Binding SelectFamilyFolderCommand}">
+                </Button>
+
+                <Label Margin="20,0,0,0"
+                   Content="Category:"/>
+
+                <ComboBox 
+                 MinWidth="150"
+                 ItemsSource="{Binding CategoryNames}"
+                 SelectedItem="{Binding SelectedCategoryName, Mode=TwoWay}"
+                 ToolTip="Filtering will not deselect any items selected before the filtering was enabled">
+
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding}" HorizontalAlignment="Center" FontSize="14"/>
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+
+                </ComboBox>
+            </StackPanel>
+
+
+            <DataGrid x:Name="DataGridFamily"
+                      Margin="5"
+                      Grid.Row="1"
+                      Grid.Column="0"
+                      ItemsSource="{Binding FamilyFilterCollection.View}"
+                      AutoGenerateColumns="False"
+                      BorderBrush="LightGray"
+                      CanUserAddRows="False"
+                      BorderThickness="1"
+                      Background="White">
+
+                <DataGrid.Columns>
+                    <DataGridTemplateColumn
+                        Width="50"
+                        MinWidth="50"
+                        Header="Select"
+                        CanUserReorder="False"
+                        CanUserResize="true">
+
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <CheckBox IsChecked="{Binding IsSelected,UpdateSourceTrigger=PropertyChanged}">
+
+                                </CheckBox>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+
+                    <DataGridTextColumn Header="Family Name"
+                                        Binding="{Binding Family}"
+                                        Width="*"
+                                        ScrollViewer.CanContentScroll="True"
+                                        ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                        ScrollViewer.HorizontalScrollBarVisibility="Hidden"
+                                        IsReadOnly="True">
+
+                    </DataGridTextColumn>
+
+                    <DataGridTextColumn Header="Category"
+                                        Width="*"
+                                        Binding="{Binding Category}"
+                                        IsReadOnly="True">
+
+                    </DataGridTextColumn>
+
+                </DataGrid.Columns>
+
+            </DataGrid>
+
+
+        </Grid>
+
     </Grid>
 </Window>

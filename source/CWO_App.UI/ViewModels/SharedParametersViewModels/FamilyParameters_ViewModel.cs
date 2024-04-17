@@ -7,6 +7,8 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Win32;
 using Microsoft.WindowsAPICodePack.Dialogs;
 using Nice3point.Revit.Toolkit.External.Handlers;
+using RevitCore.Extensions;
+using RevitCore.Extensions.Definition;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -29,13 +31,16 @@ namespace CWO_App.UI.ViewModels.SharedParametersViewModels
 
         private FamilyParametersModel _model;
 
-        private string lastOpenedFolder = "";
+        private static string lastOpenedFolder = "";
 
        // [ObservableProperty] private ObservableCollection<SharedParameterDataRow> _sharedParametersData = [];
         //[ObservableProperty] private ObservableCollection<FamilyDataGridRow> _familiesData = [];
 
         [ObservableProperty] private CollectionViewSource _searchStringParameterFilterCollection;
         [ObservableProperty] private CollectionViewSource _familyFilterCollection;
+
+        [ObservableProperty] private ObservableCollection<SharedParameterDataRow> _sharedParameterDataRows = new ObservableCollection<SharedParameterDataRow>();
+        [ObservableProperty] private ObservableCollection<FamilyDataGridRow> _familyDataRows = new ObservableCollection<FamilyDataGridRow>();
 
         [ObservableProperty] private ObservableCollection<string> _groupNames = [];
         [ObservableProperty] private string _selectedGroupName;
@@ -67,6 +72,12 @@ namespace CWO_App.UI.ViewModels.SharedParametersViewModels
             this.SearchStringParameterFilterCollection.View.Refresh();
         }
 
+        partial void OnSelectedCategoryNameChanged(string oldValue, string newValue)
+        {
+            if(this.FamilyFilterCollection==null) return;
+
+            this.FamilyFilterCollection.View.Refresh(); 
+        }
 
         private void OnWindowOpened(object sender, EventArgs e)
         {
@@ -83,15 +94,15 @@ namespace CWO_App.UI.ViewModels.SharedParametersViewModels
                 }
                 
                 _model = new FamilyParametersModel(definitionFile);
-                _model.SetParameters();
+                _model.SetAllParameters();
 
                 this.GroupNames.Clear();
                 this.GroupNames.Add("");
 
-                var parametersData = new List<SharedParameterDataRow>();
+                this.SharedParameterDataRows.Clear();
                 _model.AllParameters
                 .ForEach(d => {
-                    parametersData.Add(new SharedParameterDataRow()
+                    SharedParameterDataRows.Add(new SharedParameterDataRow()
                     {
                         IsSelected = false,
                         ParameterGroup = d.groupName,
@@ -105,7 +116,7 @@ namespace CWO_App.UI.ViewModels.SharedParametersViewModels
 
                 this.SearchStringParameterFilterCollection = new CollectionViewSource
                 {
-                    Source = parametersData
+                    Source = this.SharedParameterDataRows
                 };
 
                 this.SearchStringParameterFilterCollection.Filter += GetParameterSearchStringFilter;
@@ -140,9 +151,39 @@ namespace CWO_App.UI.ViewModels.SharedParametersViewModels
         }
 
         [RelayCommand]
-        private void ApplyParameters()
+        private async Task ApplyParameters()
         {
-            
+            //get selected parameters and families
+
+            var selectedFamilyNames = this.FamilyDataRows.Where(f => f.IsSelected)
+                .Select(f=>f.Family).ToList();
+
+            if (selectedFamilyNames == null || selectedFamilyNames.Count == 0)
+            {
+                return;
+            }
+
+            var selectedParameterData = this.SharedParameterDataRows.Where(x=> x.IsSelected).ToList();
+
+            if (selectedParameterData == null || selectedParameterData.Count == 0)
+            {
+                return;
+            }
+
+            _model.SetSelectedExternalDefinitions(selectedParameterData);
+
+            await _asyncExternalHandler.RaiseAsync((uiApp) => {
+
+                uiApp.ActiveUIDocument.Document.UseTransaction(() =>
+                    _model.LoadSelectedFamilies(uiApp.ActiveUIDocument.Document, selectedFamilyNames),
+                    "Families loaded");
+            });
+
+            await _asyncExternalHandler.RaiseAsync((uiApp) => {
+                _model.ApplySharedParameters(uiApp.ActiveUIDocument.Document, GroupTypeId.Text, true);
+            });
+
+            Autodesk.Revit.UI.TaskDialog.Show("Message", "Shared Parameters added to Families!!!");
         }
 
         [RelayCommand]
@@ -167,64 +208,84 @@ namespace CWO_App.UI.ViewModels.SharedParametersViewModels
                 lastOpenedFolder = dialog.FileName;
             }
 
-            string[] rfaFiles = Directory.GetFiles(lastOpenedFolder, "*.rfa");
-            if (rfaFiles.Length == 0)
+            var rfaFiles = Directory.GetFiles(lastOpenedFolder, "*.rfa").ToList();
+            if (rfaFiles.Count == 0)
             {
                 _logger.LogInformation($"No revit family files found under {lastOpenedFolder}");
                 return;
             }
 
             // do magic
-            await SetFamilyData(rfaFiles);
+            if (_model != null)
+            {
+                _model.SetAllFamilies(rfaFiles);
+                await SetFamilyData(rfaFiles);
+            }
+
         }
 
-        private async Task SetFamilyData(string[] rfaFiles)
+        private async Task SetFamilyData(List<string> rfaFiles,bool getCategories = false)
         {
-            List<FamilyDataGridRow> data = [];
             await _asyncExternalHandler.RaiseAsync((uiAPp) =>
             {
                 var uiDoc = uiAPp.ActiveUIDocument;
                 var doc = uiDoc.Document;
 
                 this.CategoryNames.Clear();
-                this.CategoryNames.Add("");
+                this.FamilyDataRows.Clear();
 
-                using (Transaction tr = new Transaction(doc, "categoryExtracted"))
+                if (getCategories)
                 {
-                    tr.Start();
+                    this.CategoryNames.Add("");
 
-                    try
+                    using (Transaction tr = new Transaction(doc, "categoryExtracted"))
                     {
-                        foreach (var rfaFile in rfaFiles)
+                        tr.Start();
+
+                        try
                         {
-                            if (!doc.LoadFamily(rfaFile, out Family fam))
-                                continue;
-
-                            data.Add(new FamilyDataGridRow()
+                            foreach (var rfaFile in rfaFiles)
                             {
-                                IsSelected = false,
-                                Family = fam.Name,
-                                Category = fam.FamilyCategory.Name
-                            });
+                                if (!doc.LoadFamily(rfaFile, out Family fam))
+                                    continue;
 
-                            if (!CategoryNames.Contains(fam.FamilyCategory.Name))
-                                CategoryNames.Add(fam.Category.Name);
+                                FamilyDataRows.Add(new FamilyDataGridRow()
+                                {
+                                    IsSelected = false,
+                                    Family = fam.Name,
+                                    Category = fam.FamilyCategory.Name
+                                });
 
+                                if (!CategoryNames.Contains(fam.FamilyCategory.Name))
+                                    CategoryNames.Add(fam.FamilyCategory.Name);
+
+                            }
                         }
-                    }
-                    catch
-                    {
+                        catch
+                        {
+                            tr.RollBack();
+                        }
+
                         tr.RollBack();
                     }
 
-                    tr.RollBack();
+                }
+                else
+                {
+                    foreach (var rfaFile in rfaFiles)
+                    {
+                        FamilyDataRows.Add(new FamilyDataGridRow()
+                        {
+                            Family = Path.GetFileNameWithoutExtension(rfaFile)
+                        });
+                    }
                 }
 
             });
 
             this.FamilyFilterCollection = new CollectionViewSource()
             {
-                Source = data
+                Source = this.FamilyDataRows
             };
 
             this.FamilyFilterCollection.Filter += GetFamilyCategorySearchFilter;

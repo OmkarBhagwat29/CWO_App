@@ -94,7 +94,7 @@ namespace CWO_App.UI.Models
         {
             foreach (var f in LoadedFamilies)
             {
-                f.TryDeleteSharedParametersFromFamily(doc, this.Definitions.Select(d=>d.definition).ToList());
+                f.DeleteSharedParametersFromFamily(doc, this.Definitions.Select(d=>d.definition).ToList());
             }
         }
 

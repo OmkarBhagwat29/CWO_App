@@ -8,7 +8,6 @@ using Microsoft.Win32;
 using Microsoft.WindowsAPICodePack.Dialogs;
 using Nice3point.Revit.Toolkit.External.Handlers;
 using RevitCore.Extensions;
-using RevitCore.Extensions.Definition;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -150,27 +149,26 @@ namespace CWO_App.UI.ViewModels.SharedParametersViewModels
 
         }
 
-        [RelayCommand]
-        private async Task ApplyParameters()
+        private async Task SetSelectedDataToModel()
         {
             //get selected parameters and families
 
             var selectedFamilyNames = this.FamilyDataRows.Where(f => f.IsSelected)
-                .Select(f=>f.Family).ToList();
+                .Select(f => f.Family).ToList();
 
             if (selectedFamilyNames == null || selectedFamilyNames.Count == 0)
             {
                 return;
             }
 
-            var selectedParameterData = this.SharedParameterDataRows.Where(x=> x.IsSelected).ToList();
+            var selectedParameterData = this.SharedParameterDataRows.Where(x => x.IsSelected).ToList();
 
             if (selectedParameterData == null || selectedParameterData.Count == 0)
             {
                 return;
             }
 
-            _model.SetSelectedExternalDefinitions(selectedParameterData);
+            _model.SetSelectedExternalDefinitions(selectedParameterData,GroupTypeId.Text);
 
             await _asyncExternalHandler.RaiseAsync((uiApp) => {
 
@@ -178,18 +176,52 @@ namespace CWO_App.UI.ViewModels.SharedParametersViewModels
                     _model.LoadSelectedFamilies(uiApp.ActiveUIDocument.Document, selectedFamilyNames),
                     "Families loaded");
             });
+        }
+
+
+        [RelayCommand]
+        private async Task ApplyParameters()
+        {
+            if (_model == null)
+                return;
+
+            //set selected data to model
+            await this.SetSelectedDataToModel();
+
+            if (_model.Definitions.Count == 0 || _model.LoadedFamilies.Count == 0)
+                return;
+
 
             await _asyncExternalHandler.RaiseAsync((uiApp) => {
-                _model.ApplySharedParameters(uiApp.ActiveUIDocument.Document, GroupTypeId.Text, true);
+                _model.ApplySharedParameters(uiApp.ActiveUIDocument.Document);
+
+                uiApp.ActiveUIDocument.Document.UseTransaction(() => uiApp.ActiveUIDocument.Document.Regenerate(),"Regenerate");
             });
 
             Autodesk.Revit.UI.TaskDialog.Show("Message", "Shared Parameters added to Families!!!");
         }
 
         [RelayCommand]
-        private void DeleteParameters()
+        private async Task DeleteParameters()
         {
-            
+            if (_model == null)
+                return;
+
+            //set selected data to model
+            await this.SetSelectedDataToModel();
+
+            if (_model.Definitions.Count == 0 || _model.LoadedFamilies.Count == 0)
+                return;
+
+            await _asyncExternalHandler.RaiseAsync((uiApp) => { 
+
+                _model.DeleteSharedParameters(uiApp.ActiveUIDocument.Document);
+
+                uiApp.ActiveUIDocument.Document.UseTransaction(() => uiApp.ActiveUIDocument.Document.Regenerate(), "Regenerate");
+
+            });
+
+            Autodesk.Revit.UI.TaskDialog.Show("Message", "Shared Parameters deleted from Families!!!");
         }
 
         [RelayCommand]

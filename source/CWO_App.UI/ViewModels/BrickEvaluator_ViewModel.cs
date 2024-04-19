@@ -5,6 +5,8 @@ using Microsoft.Extensions.Logging;
 using Nice3point.Revit.Toolkit.External.Handlers;
 using System.Collections.ObjectModel;
 using RevitCore.Extensions;
+using CWO_App.UI.Models;
+using RevitCore.Extensions.Selection;
 
 namespace CWO_App.UI.ViewModels
 {
@@ -13,6 +15,8 @@ namespace CWO_App.UI.ViewModels
         private readonly ActionEventHandler _externalHandler = new();
         private readonly AsyncEventHandler _asyncExternalHandler = new();
         private readonly AsyncEventHandler<ElementId> _asyncIdExternalHandler = new();
+
+        private readonly WallTagsModel _model = new();
 
         private readonly ILogger _logger;
         public IWindowService WindowService;
@@ -37,22 +41,47 @@ namespace CWO_App.UI.ViewModels
         }
 
         [RelayCommand]
-        private void SelectDimensions()
+        private async Task SelectDimensions()
         {
-            TaskDialog.Show("Message", "Binding is working!!!");
+            await _asyncExternalHandler.RaiseAsync((uiApp) =>
+            {
+
+                _model.SelectedDimensions = uiApp.ActiveUIDocument.PickElements((e) =>
+                  {
+                      if (!(e is Dimension lD))
+                          return false;
+
+                      if (lD.Name != this.SelectedDimensionType) return false;
+
+                      return true;
+                  }, PickElementOptionFactory.CreateCurrentDocumentOption()).Cast<Dimension>();
+
+                _logger.LogInformation("Selection Successful");
+            });
+        }
+
+        [RelayCommand]
+        private async Task GenerateAboveText()
+        {
+            await _asyncExternalHandler?.RaiseAsync((uiApp) => {
+
+                uiApp.ActiveUIDocument.Document.UseTransaction(_model.GenerateDimensionAboveTags, "Above Tags Generated");
+            });
         }
 
 
         private void SetLinearDimensionTypes(UIApplication uiApp)
         {
-            List<string> linearDimensionNames = uiApp.ActiveUIDocument.Document
+            var dimensions = uiApp.ActiveUIDocument.Document
                 .GetInstancesOfCategory(BuiltInCategory.OST_Dimensions, (e) => {
 
-                if (!(e is Dimension d))
-                    return false;
+                    if (!(e is Dimension d))
+                        return false;
 
-                return d.DimensionShape == DimensionShape.Linear;
-            }).Select(e => e.Name).Distinct().ToList();
+                    return d.DimensionShape == DimensionShape.Linear;
+                }).Cast<Dimension>();
+
+            List<string> linearDimensionNames = dimensions.Select(e => e.Name).Distinct().ToList();
 
             if (linearDimensionNames == null || linearDimensionNames.Count == 0)
             {
@@ -68,6 +97,8 @@ TaskDialog.Show("Message", "No Linear Dimensions Found in the Project");
             this.DimensionTypes.Clear();
             linearDimensionNames.ForEach(name=> this.DimensionTypes.Add(name));
             this.SelectedDimensionType = this.DimensionTypes.FirstOrDefault();
+
+            WallTagsModel.AvailableDimensionTypes = dimensions;
         }
 
     }

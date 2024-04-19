@@ -25,6 +25,8 @@ namespace CWO_App
                var panel = Application.CreatePanel(parameterPanelName, tabName);
 
                 BrickEvaluator_Command.CreateBrickEvaluatorButton(panel);
+
+                FamilyParameters_Command.CreateFamilyParametersButton(panel);
             }
             catch
             {

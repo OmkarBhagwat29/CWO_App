@@ -44,9 +44,7 @@ namespace CWO_App.UI.ViewModels.SharedParametersViewModels
         [ObservableProperty] private ObservableCollection<string> _groupNames = [];
         [ObservableProperty] private string _selectedGroupName;
         [ObservableProperty] private string _parameterNameSearchString;
-
-        [ObservableProperty] private ObservableCollection<string> _categoryNames = [];
-        [ObservableProperty] private string _selectedCategoryName;
+        [ObservableProperty] private string _familyNameSearchString;
 
         public FamilyParameters_ViewModel( ILogger<FamilyParameters_ViewModel> logger, IWindowService windowService)
         {
@@ -71,11 +69,11 @@ namespace CWO_App.UI.ViewModels.SharedParametersViewModels
             this.SearchStringParameterFilterCollection.View.Refresh();
         }
 
-        partial void OnSelectedCategoryNameChanged(string oldValue, string newValue)
+        partial void OnFamilyNameSearchStringChanged(string oldValue, string newValue)
         {
-            if(this.FamilyFilterCollection==null) return;
+            if(this.FamilyFilterCollection == null) return;
 
-            this.FamilyFilterCollection.View.Refresh(); 
+            this.FamilyFilterCollection.View.Refresh();
         }
 
         private void OnWindowOpened(object sender, EventArgs e)
@@ -87,7 +85,7 @@ namespace CWO_App.UI.ViewModels.SharedParametersViewModels
                 var definitionFile = app.OpenSharedParameterFile();
                 if (definitionFile == null)
                 {
-                    _logger.LogInformation("NO shared parameter file found in the Project");
+                    Autodesk.Revit.UI.TaskDialog.Show("Message", "NO shared parameter file found in the Project");
                     WindowController.Close<FamilyParameters_Window>();
                     return;
                 }
@@ -123,31 +121,6 @@ namespace CWO_App.UI.ViewModels.SharedParametersViewModels
             });
         }
 
-        private void GetParameterSearchStringFilter(object sender, FilterEventArgs e)
-        {
-            var parameterData = (SharedParameterDataRow)e.Item;
-
-            if (this.SelectedGroupName == null || this.SelectedGroupName == string.Empty)
-            {
-                if (string.IsNullOrWhiteSpace(this.ParameterNameSearchString))
-                    e.Accepted = true;
-                else
-                    e.Accepted = parameterData.ParameterName.Contains(this.ParameterNameSearchString, StringComparison.CurrentCultureIgnoreCase);
-            }
-            else
-            {
-                if (string.IsNullOrWhiteSpace(this.ParameterNameSearchString))
-                {
-                    e.Accepted = parameterData.ParameterGroup == this.SelectedGroupName;
-                }
-                else
-                {
-                    e.Accepted = parameterData.ParameterGroup == this.SelectedGroupName &&
-                        parameterData.ParameterName.Contains(this.ParameterNameSearchString,StringComparison.CurrentCultureIgnoreCase);
-                }
-            }
-
-        }
 
         private async Task SetSelectedDataToModel()
         {
@@ -191,14 +164,24 @@ namespace CWO_App.UI.ViewModels.SharedParametersViewModels
             if (_model.Definitions.Count == 0 || _model.LoadedFamilies.Count == 0)
                 return;
 
+            try
+            {
+               await _asyncExternalHandler.RaiseAsync((uiApp) => {
+                    _model.ApplySharedParameters(uiApp.ActiveUIDocument.Document);
 
-            await _asyncExternalHandler.RaiseAsync((uiApp) => {
-                _model.ApplySharedParameters(uiApp.ActiveUIDocument.Document);
+                    uiApp.ActiveUIDocument.Document.UseTransaction(() => uiApp.ActiveUIDocument.Document.Regenerate(), "Regenerate");
 
-                uiApp.ActiveUIDocument.Document.UseTransaction(() => uiApp.ActiveUIDocument.Document.Regenerate(),"Regenerate");
-            });
+                    Autodesk.Revit.UI.TaskDialog.Show("Message", "Shared Parameters added to Families!!!");
 
-            Autodesk.Revit.UI.TaskDialog.Show("Message", "Shared Parameters added to Families!!!");
+                });
+            }
+            catch
+            {
+                Autodesk.Revit.UI.TaskDialog.Show("Error", "Unable to add Shared Parameters to Families!!!");
+                
+            }
+
+            WindowController.Focus<FamilyParameters_Window>();
         }
 
         [RelayCommand]
@@ -213,15 +196,27 @@ namespace CWO_App.UI.ViewModels.SharedParametersViewModels
             if (_model.Definitions.Count == 0 || _model.LoadedFamilies.Count == 0)
                 return;
 
-            await _asyncExternalHandler.RaiseAsync((uiApp) => { 
+            try
+            {
+                await _asyncExternalHandler.RaiseAsync((uiApp) => {
 
-                _model.DeleteSharedParameters(uiApp.ActiveUIDocument.Document);
+                    _model.DeleteSharedParameters(uiApp.ActiveUIDocument.Document);
 
-                uiApp.ActiveUIDocument.Document.UseTransaction(() => uiApp.ActiveUIDocument.Document.Regenerate(), "Regenerate");
+                    uiApp.ActiveUIDocument.Document.UseTransaction(() => uiApp.ActiveUIDocument.Document.Regenerate(), "Regenerate");
 
-            });
+                    Autodesk.Revit.UI.TaskDialog.Show("Message", "Shared Parameters deleted from Families!!!");
 
-            Autodesk.Revit.UI.TaskDialog.Show("Message", "Shared Parameters deleted from Families!!!");
+                });
+            }
+            catch
+            {
+
+                Autodesk.Revit.UI.TaskDialog.Show("Error", "Unable to delete Shared Parameters from Families!!!");
+               
+            }
+
+            WindowController.Focus<FamilyParameters_Window>();
+
         }
 
         [RelayCommand]
@@ -263,47 +258,8 @@ namespace CWO_App.UI.ViewModels.SharedParametersViewModels
                 var uiDoc = uiAPp.ActiveUIDocument;
                 var doc = uiDoc.Document;
 
-                this.CategoryNames.Clear();
                 this.FamilyDataRows.Clear();
 
-                if (getCategories)
-                {
-                    this.CategoryNames.Add("");
-
-                    using (Transaction tr = new Transaction(doc, "categoryExtracted"))
-                    {
-                        tr.Start();
-
-                        try
-                        {
-                            foreach (var rfaFile in rfaFiles)
-                            {
-                                if (!doc.LoadFamily(rfaFile, out Family fam))
-                                    continue;
-
-                                FamilyDataRows.Add(new FamilyDataGridRow()
-                                {
-                                    IsSelected = false,
-                                    Family = fam.Name,
-                                    Category = fam.FamilyCategory.Name
-                                });
-
-                                if (!CategoryNames.Contains(fam.FamilyCategory.Name))
-                                    CategoryNames.Add(fam.FamilyCategory.Name);
-
-                            }
-                        }
-                        catch
-                        {
-                            tr.RollBack();
-                        }
-
-                        tr.RollBack();
-                    }
-
-                }
-                else
-                {
                     foreach (var rfaFile in rfaFiles)
                     {
                         FamilyDataRows.Add(new FamilyDataGridRow()
@@ -311,8 +267,6 @@ namespace CWO_App.UI.ViewModels.SharedParametersViewModels
                             Family = Path.GetFileNameWithoutExtension(rfaFile)
                         });
                     }
-                }
-
             });
 
             this.FamilyFilterCollection = new CollectionViewSource()
@@ -328,15 +282,42 @@ namespace CWO_App.UI.ViewModels.SharedParametersViewModels
         {
             var familyData = (FamilyDataGridRow)e.Item;
 
-            if (this.SelectedCategoryName == null || this.SelectedCategoryName == string.Empty)
+            if (this.FamilyNameSearchString == null || this.FamilyNameSearchString == string.Empty)
             {
                 e.Accepted = true;
             }
             else
             {
-                e.Accepted = familyData.Category == this.SelectedCategoryName;
+                e.Accepted = familyData.Family.Contains(this.FamilyNameSearchString,StringComparison.CurrentCultureIgnoreCase);
             }
 
         }
+
+        private void GetParameterSearchStringFilter(object sender, FilterEventArgs e)
+        {
+            var parameterData = (SharedParameterDataRow)e.Item;
+
+            if (this.SelectedGroupName == null || this.SelectedGroupName == string.Empty)
+            {
+                if (string.IsNullOrWhiteSpace(this.ParameterNameSearchString))
+                    e.Accepted = true;
+                else
+                    e.Accepted = parameterData.ParameterName.Contains(this.ParameterNameSearchString, StringComparison.CurrentCultureIgnoreCase);
+            }
+            else
+            {
+                if (string.IsNullOrWhiteSpace(this.ParameterNameSearchString))
+                {
+                    e.Accepted = parameterData.ParameterGroup == this.SelectedGroupName;
+                }
+                else
+                {
+                    e.Accepted = parameterData.ParameterGroup == this.SelectedGroupName &&
+                        parameterData.ParameterName.Contains(this.ParameterNameSearchString, StringComparison.CurrentCultureIgnoreCase);
+                }
+            }
+
+        }
+
     }
 }

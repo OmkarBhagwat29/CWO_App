@@ -10,6 +10,5 @@ namespace CWO_App.UI.ViewModels.SharedParametersViewModels
     {
         [ObservableProperty] private bool _isSelected;
         [ObservableProperty] private string _family;
-        [ObservableProperty] private string _category;
     }
 }

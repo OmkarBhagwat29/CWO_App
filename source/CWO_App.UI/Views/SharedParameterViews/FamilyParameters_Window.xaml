@@ -87,8 +87,8 @@
 
                 <DataGrid.Columns>
                     <DataGridTemplateColumn
-                        Width="50"
-                        MinWidth="50"
+                        Width="45"
+                        MinWidth="30"
                         Header="Select"
                         CanUserReorder="False"
                         CanUserResize="true">
@@ -118,6 +118,22 @@
                                         IsReadOnly="True">
 
                     </DataGridTextColumn>
+
+                    <DataGridTemplateColumn
+                        Width="60"
+                        MinWidth="20"
+                        Header="Instance"
+                        CanUserReorder="False"
+                        CanUserResize="true">
+
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <CheckBox IsChecked="{Binding IsInstance,UpdateSourceTrigger=PropertyChanged}">
+
+                                </CheckBox>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
 
                 </DataGrid.Columns>
 
@@ -173,21 +189,17 @@
                 </Button>
 
                 <Label Margin="20,0,0,0"
-                   Content="Category:"/>
+                   Content="Search:"/>
 
-                <ComboBox 
-                 MinWidth="150"
-                 ItemsSource="{Binding CategoryNames}"
-                 SelectedItem="{Binding SelectedCategoryName, Mode=TwoWay}"
-                 ToolTip="Filtering will not deselect any items selected before the filtering was enabled">
-
-                    <ComboBox.ItemTemplate>
-                        <DataTemplate>
-                            <TextBlock Text="{Binding}" HorizontalAlignment="Center" FontSize="14"/>
-                        </DataTemplate>
-                    </ComboBox.ItemTemplate>
-
-                </ComboBox>
+                <TextBox 
+                    Height="30"
+                    Width="180"
+                    Margin="0,0,10,0"
+                    FontSize="14"
+                    Text ="{Binding Path=FamilyNameSearchString,
+                    UpdateSourceTrigger=PropertyChanged}"
+                    ToolTip="The Searchbox will not deselect any items selected before the filtering was enabled"
+                    TextAlignment="Center"/>
             </StackPanel>
 
 
@@ -204,8 +216,8 @@
 
                 <DataGrid.Columns>
                     <DataGridTemplateColumn
-                        Width="50"
-                        MinWidth="50"
+                        Width="40"
+                        MinWidth="20"
                         Header="Select"
                         CanUserReorder="False"
                         CanUserResize="true">
@@ -225,13 +237,6 @@
                                         ScrollViewer.CanContentScroll="True"
                                         ScrollViewer.VerticalScrollBarVisibility="Auto"
                                         ScrollViewer.HorizontalScrollBarVisibility="Hidden"
-                                        IsReadOnly="True">
-
-                    </DataGridTextColumn>
-
-                    <DataGridTextColumn Header="Category"
-                                        Width="*"
-                                        Binding="{Binding Category}"
                                         IsReadOnly="True">
 
                     </DataGridTextColumn>

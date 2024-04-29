@@ -9,7 +9,7 @@
         mc:Ignorable="d"
         ResizeMode="NoResize"
         Title="Family Parameters"
-        Height="500" Width="800">
+        Height="700" Width="875">
 
 
     <Window.Resources>
@@ -33,8 +33,9 @@
 
             <Grid.RowDefinitions>
                 <RowDefinition Height="50"/>
-                <RowDefinition Height="*"/>
                 <RowDefinition Height="50"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="70"/>
             </Grid.RowDefinitions>
 
             <StackPanel Orientation="Horizontal"
@@ -44,8 +45,8 @@
 
                 <ComboBox 
                  MinWidth="150"
-                 ItemsSource="{Binding GroupNames}"
-                 SelectedItem="{Binding SelectedGroupName, Mode=TwoWay}"
+                 ItemsSource="{Binding SharedGroupNames}"
+                 SelectedItem="{Binding SelectedSharedGroupName, Mode=TwoWay}"
                  ToolTip="Filtering will not deselect any items selected before the filtering was enabled">
 
                     <ComboBox.ItemTemplate>
@@ -74,9 +75,30 @@
 
             </StackPanel>
 
+            <StackPanel Grid.Row="1" Orientation="Horizontal"
+                        VerticalAlignment="Center">
+                <Label Content="Parameter Group"/>
+                <ComboBox 
+                 MinWidth="200"
+                    MinHeight="30"
+                 ItemsSource="{Binding ParameterGroupNames}"
+                 SelectedItem="{Binding SelectedParameterGroupName, Mode=TwoWay}"
+                 ToolTip="selected parameter group will be applied to all selected parameters">
+
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding}" HorizontalAlignment="Center" FontSize="14"/>
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+
+                </ComboBox>
+
+            </StackPanel>
+
+
             <DataGrid x:Name="DataGridParameters"
                       Margin="5"
-                      Grid.Row="1"
+                      Grid.Row="2"
                       Grid.Column="0"
                       ItemsSource="{Binding SearchStringParameterFilterCollection.View}"
                       AutoGenerateColumns="False"
@@ -89,21 +111,31 @@
                     <DataGridTemplateColumn
                         Width="45"
                         MinWidth="30"
-                        Header="Select"
                         CanUserReorder="False"
                         CanUserResize="true">
 
+                        <DataGridTemplateColumn.HeaderTemplate>
+                            <DataTemplate x:Name="dtAllParamCheckBox">
+                                <CheckBox Name="cbxParamAll" Content="All"
+                                          IsChecked="{Binding Path=DataContext.AllParamsSelected,
+                                    RelativeSource={RelativeSource AncestorType=DataGrid}}"/>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.HeaderTemplate>
+
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
-                                <CheckBox IsChecked="{Binding IsSelected,UpdateSourceTrigger=PropertyChanged}">
+                                <CheckBox IsChecked="{Binding IsSelected,UpdateSourceTrigger=PropertyChanged}"
+                                          Checked="SelectionParamCheckBox_Checked"
+                                          Unchecked="SelectionParamCheckBox_Checked"
+                                          KeyDown="DataGrid_OnParamKeyDown">
 
                                 </CheckBox>
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>
 
-                    <DataGridTextColumn Header="Parameter Group"
-                                        Binding="{Binding ParameterGroup}"
+                    <DataGridTextColumn Header="Shared Group"
+                                        Binding="{Binding SharedGroup}"
                                         Width="*"
                                         ScrollViewer.CanContentScroll="True"
                                         ScrollViewer.VerticalScrollBarVisibility="Auto"
@@ -120,15 +152,27 @@
                     </DataGridTextColumn>
 
                     <DataGridTemplateColumn
-                        Width="60"
+                        Width="50"
                         MinWidth="20"
-                        Header="Instance"
                         CanUserReorder="False"
                         CanUserResize="true">
 
+                        <DataGridTemplateColumn.HeaderTemplate>
+                            <DataTemplate x:Name="dtAllInstCheckBox">
+                                <CheckBox Name="cbxInstAll" Content="Inst"
+                                          IsChecked="{Binding Path=DataContext.AllParamInstanceSelected,
+                                    RelativeSource={RelativeSource AncestorType=DataGrid}}"/>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.HeaderTemplate>
+
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
-                                <CheckBox IsChecked="{Binding IsInstance,UpdateSourceTrigger=PropertyChanged}">
+                                <CheckBox 
+                                    IsChecked="{Binding IsInstance,
+                                    UpdateSourceTrigger=PropertyChanged}"
+                                    Checked="Selected_InstanceChecked"
+                                    Unchecked="Selected_InstanceChecked"
+                                    KeyDown="DataGrid_OnParamKeyDown">
 
                                 </CheckBox>
                             </DataTemplate>
@@ -139,20 +183,29 @@
 
             </DataGrid>
 
-            <StackPanel Grid.Row="2" Width="400"
+            <Grid Grid.Row="3">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition/>
+                    <ColumnDefinition/>
+                </Grid.ColumnDefinitions>
+                
+                <StackPanel 
+                    Grid.Column="0"
+                        HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
                     Orientation="Horizontal">
 
-                <Button 
-                    Margin="110,0,0,0"
+                    <Button 
+                    Margin="10,0,0,0"
                     HorizontalAlignment="Center"
                     BorderThickness="0"
                     Width="50" Height="30"
                     Content="Apply"
                     Style="{StaticResource CustomButtonStyle}"
                     Command="{Binding ApplyParametersCommand}">
-                </Button>
+                    </Button>
 
-                <Button 
+                    <Button 
                     Margin="50,0,0,0"
                     HorizontalAlignment="Center"
                     BorderThickness="0"
@@ -160,15 +213,34 @@
                     Content="Delete"
                     Style="{StaticResource CustomButtonStyle}"
                     Command="{Binding DeleteParametersCommand}">
-                </Button>
+                    </Button>
 
-            </StackPanel>
+                </StackPanel>
+
+                <StackPanel
+    Grid.Column="1"
+    VerticalAlignment="Center"
+    HorizontalAlignment="Left"
+    Orientation="Vertical">
+                    <CheckBox Content=" Delete from Project"
+              ToolTip="Check this box if you want to change the parameter group,&#xA;this will delete selected parameters from all the&#xA;families and from project"
+              IsChecked="{Binding DeleteFromProject,UpdateSourceTrigger=PropertyChanged}"/>
+
+
+                    <CheckBox Margin="0,10,0,0" 
+              Content="Delete from Families"
+              ToolTip="Check this box if you want to remove paramter from families"
+              IsChecked="{Binding DeleteFromFamily,UpdateSourceTrigger=PropertyChanged}"/>
+                </StackPanel>
+
+            </Grid>
 
         </Grid>
 
         <Grid Grid.Column="1">
 
             <Grid.RowDefinitions>
+                <RowDefinition Height="50"/>
                 <RowDefinition Height="50"/>
                 <RowDefinition Height="*"/>
                 <RowDefinition Height="10"/>
@@ -178,7 +250,7 @@
                         VerticalAlignment="Center">
 
                 <Button 
-                    Margin="5,0,0,0"
+                    Margin="10,0,0,0"
                 HorizontalAlignment="Center"
                 VerticalAlignment="Center"
                     BorderThickness="0"
@@ -203,9 +275,27 @@
             </StackPanel>
 
 
+            <StackPanel Grid.Row="1" Orientation="Horizontal"
+                        VerticalAlignment="Center">
+
+                <CheckBox Margin="10,0,0,0" VerticalAlignment="Center"
+                    Content="Save Family"
+                          IsChecked="{Binding SaveFamily,UpdateSourceTrigger=PropertyChanged}"/>
+
+                <Label VerticalAlignment="Center" Margin="30,0,0,0"
+                       Content="Family On Load Option:"/>
+                
+                <CheckBox Margin="0,0,0,0"
+                          VerticalAlignment="Center"
+                          Content="Overwrite Parameters"
+                          IsChecked="{Binding OverwriteParameters, UpdateSourceTrigger=PropertyChanged}"/>
+
+            </StackPanel>
+            
+            
             <DataGrid x:Name="DataGridFamily"
                       Margin="5"
-                      Grid.Row="1"
+                      Grid.Row="2"
                       Grid.Column="0"
                       ItemsSource="{Binding FamilyFilterCollection.View}"
                       AutoGenerateColumns="False"
@@ -216,15 +306,26 @@
 
                 <DataGrid.Columns>
                     <DataGridTemplateColumn
-                        Width="40"
+                        Width="50"
                         MinWidth="20"
-                        Header="Select"
                         CanUserReorder="False"
                         CanUserResize="true">
+                        
+                        <DataGridTemplateColumn.HeaderTemplate>
+                            <DataTemplate x:Name="dtAllFamilyCheckBox">
+                                <CheckBox Name="cbxFamilyAll" Content="All"
+                                IsChecked="{Binding Path=DataContext.AllFamilySelected,
+                                    RelativeSource={RelativeSource AncestorType=DataGrid}}"/>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.HeaderTemplate>
 
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
-                                <CheckBox IsChecked="{Binding IsSelected,UpdateSourceTrigger=PropertyChanged}">
+                                <CheckBox IsChecked="{Binding IsFamilySelected,
+                                    UpdateSourceTrigger=PropertyChanged}"
+                                          Checked="Selected_FamilyChecked"
+                                          Unchecked="Selected_FamilyChecked"
+                                          KeyDown="DataGrid_OnFamilyKeyDown">
 
                                 </CheckBox>
                             </DataTemplate>

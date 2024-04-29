@@ -8,7 +8,7 @@ namespace CWO_App.UI.ViewModels.SharedParametersViewModels
 {
     public sealed partial class FamilyDataGridRow : ObservableObject
     {
-        [ObservableProperty] private bool _isSelected;
+        [ObservableProperty] private bool _isFamilySelected;
         [ObservableProperty] private string _family;
     }
 }

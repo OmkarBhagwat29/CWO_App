@@ -1,0 +1,208 @@
+﻿<Window x:Class="CWO_App.UI.Views.ApartmentValidationViews.ApartmentValidation_Window"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:CWO_App.UI.Views.ApartmentValidationViews"
+        xmlns:utils="clr-namespace:CWO_App.UI.Utils"
+        mc:Ignorable="d"
+        xmlns:viewModels ="clr-namespace:CWO_App.UI.ViewModels.ApartmentValidation"
+ d:DataContext="{d:DesignInstance viewModels:ApartmentValidation_ViewModel}"
+        Title="Apartment Validation"
+         ResizeMode="NoResize"
+        Height="800" Width="600">
+    <Window.Resources>
+
+        <!-- Merge the resource dictionary containing the custom button style -->
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="../../Styles/ButtonStyles.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+
+            <utils:BooleanToVisibilityConverter x:Key="BoolToVisConverter"/>
+
+        </ResourceDictionary>
+    </Window.Resources>
+    
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="150"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="20"/>
+            <RowDefinition Height="50"/>
+            <RowDefinition Height="10"/>
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="0"
+>
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="30"/>
+                    <RowDefinition Height="30"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <StackPanel
+                    Grid.Row="0"
+                     VerticalAlignment="Top"
+                    Orientation="Horizontal">
+                    <Label Content="Apartment Type:"/>
+
+                    <ComboBox 
+                 MinWidth="200"
+                 ItemsSource="{Binding ApartmentTypes}"
+                 SelectedItem="{Binding SelectedApartmentType, Mode=TwoWay}"
+                 ToolTip="Apartment Types Existed in Project">
+
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding}" HorizontalAlignment="Center" FontSize="14"/>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+
+                    </ComboBox>
+                </StackPanel>
+
+                <StackPanel Grid.Row="1">
+                    <Label Content="Requirements:" FontSize="16"/>
+                </StackPanel>
+
+                <StackPanel Grid.Row="2" Visibility="{Binding IsStudioGridVisible, 
+                Converter={StaticResource BoolToVisConverter}}">
+                    
+                </StackPanel>
+
+                <StackPanel Grid.Row="2" Visibility="{Binding IsOneBedGridVisible, 
+                Converter={StaticResource BoolToVisConverter}}">
+
+                </StackPanel>
+
+                <StackPanel Grid.Row="2" Visibility="{Binding IsTwoBedGridVisible, 
+                Converter={StaticResource BoolToVisConverter}}">
+
+                </StackPanel>
+
+            </Grid>
+
+
+        </StackPanel>
+
+        <StackPanel Grid.Row="1" Margin="5">
+
+            <StackPanel Orientation="Horizontal">
+                <Label Content="Status:"/>
+
+                <ComboBox 
+                 MinWidth="100"
+                 ItemsSource="{Binding StatusTypes}"
+                 SelectedItem="{Binding SelectedStatusType, Mode=TwoWay}"
+                 ToolTip="pass or failed filtered">
+
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding}" HorizontalAlignment="Center" FontSize="14"/>
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+
+                </ComboBox>
+            </StackPanel>
+
+
+            <StackPanel Visibility="{Binding IsStudioGridVisible, 
+                Converter={StaticResource BoolToVisConverter}}">
+                
+                <Label Content="Studio Apartments"/>
+                
+                <DataGrid>
+
+                </DataGrid>
+
+            </StackPanel>
+
+            <StackPanel Visibility="{Binding IsOneBedGridVisible, 
+                Converter={StaticResource BoolToVisConverter}}">
+
+                <Label Content="One Bed Apartments"/>
+
+                <DataGrid 
+                    x:Name="DataGridOneBedApartments"
+                    ItemsSource="{Binding ApartmentFilterCollection.View}"
+                    AutoGenerateColumns="False"
+                    BorderBrush="LightGray"
+                    CanUserAddRows="False"
+                    Background="White"
+                    BorderThickness="1">
+
+
+                    <DataGrid.Columns>
+
+                        <DataGridTextColumn Header="Apart. Area"
+                                            Width="70"
+                                            Binding="{Binding AchievedApartmentArea}">
+                            
+                        </DataGridTextColumn>
+
+                        <DataGridTextColumn Header="KLD Area"
+                                            Binding="{Binding AchievedKLDArea}">
+                            
+                        </DataGridTextColumn>
+
+
+                        <DataGridTextColumn Header="KLD Width"
+                                            Binding="{Binding AchievedKLDArea}">
+
+                        </DataGridTextColumn>
+
+
+                        <DataGridTextColumn Header="Storage Area"
+                                            Binding="{Binding AchievedKLDArea}">
+                            
+                        </DataGridTextColumn>
+
+
+                        <DataGridTextColumn Header="Bedroom Area"
+                                            Binding="{Binding AchievedKLDArea}">
+
+                        </DataGridTextColumn>
+
+
+                        <DataGridTextColumn Header="Bedroom width"
+                                            Binding="{Binding AchievedKLDArea}">
+
+                        </DataGridTextColumn>
+
+                    </DataGrid.Columns>
+                    
+                </DataGrid>
+
+            </StackPanel>
+
+            <StackPanel Visibility="{Binding IsTwoBedGridVisible, 
+                Converter={StaticResource BoolToVisConverter}}">
+
+                <Label Content="Two Bed Apartments"/>
+                
+                <DataGrid>
+
+                </DataGrid>
+
+            </StackPanel>
+
+
+
+        </StackPanel>
+
+        <StackPanel Grid.Row="3">
+            <Button 
+                    Margin="10,0,0,0"
+                    HorizontalAlignment="Center"
+                    BorderThickness="0"
+                    Width="75" Height="30"
+                    Content="Validate"
+                    Style="{StaticResource CustomButtonStyle}"
+                    Command="{Binding ValidateCommand}">
+            </Button>
+
+        </StackPanel>
+    </Grid>
+</Window>

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace CWO_App.UI.Models
 {
-    public class WallTagsModel
+    internal class WallTagsModel
     {
         public static IEnumerable<Dimension>AvailableDimensionTypes { get; set; }
 

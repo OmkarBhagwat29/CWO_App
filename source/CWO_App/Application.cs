@@ -21,12 +21,22 @@ namespace CWO_App
                 Application.CreateRibbonTab(tabName);
 
                 string parameterPanelName = "Parameters";
+                string validationPanelName = "Validation";
+                string accPanelName = "ACC";
 
-               var panel = Application.CreatePanel(parameterPanelName, tabName);
+               var parametersPanel = Application.CreatePanel(parameterPanelName, tabName);
 
-                //BrickEvaluator_Command.CreateBrickEvaluatorButton(panel);
+                var validationPanel = Application.CreatePanel(validationPanelName, tabName);
 
-                FamilyParameters_Command.CreateFamilyParametersButton(panel);
+                var accPanel = Application.CreatePanel(accPanelName, tabName);
+
+
+                FamilyParameters_Command.CreateFamilyParametersButton(parametersPanel);
+
+
+                ApartmentValidation_Command.CreateApartmentValidationButton(validationPanel);
+
+                ACC_Command.LaunchACCButton(accPanel);
             }
             catch
             {

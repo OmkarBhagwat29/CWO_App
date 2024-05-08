@@ -36,8 +36,6 @@ namespace CWO_App.UI.ViewModels.SharedParametersViewModels
         private static string lastOpenedFolder = "";
         private static readonly List<ParameterGroupInfo> ParameterGroups = ParameterExtension.GetParameterGroups().OrderBy(g=>g.Name).ToList();
 
-       // [ObservableProperty] private ObservableCollection<SharedParameterDataRow> _sharedParametersData = [];
-        //[ObservableProperty] private ObservableCollection<FamilyDataGridRow> _familiesData = [];
 
         [ObservableProperty] private CollectionViewSource _searchStringParameterFilterCollection;
         [ObservableProperty] private CollectionViewSource _familyFilterCollection;

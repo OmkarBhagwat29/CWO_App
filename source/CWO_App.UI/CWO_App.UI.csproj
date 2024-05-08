@@ -54,4 +54,11 @@
 	  <ProjectReference Include="..\..\..\RevitCore\RevitCore.csproj" />
 	</ItemGroup>
 
+
+	<ItemGroup>
+	  <None Update="Resources\Standards\ApartmentStandards.json">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </None>
+	</ItemGroup>
+
 </Project>

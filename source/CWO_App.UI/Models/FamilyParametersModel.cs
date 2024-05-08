@@ -9,7 +9,7 @@ using System.IO;
 
 namespace CWO_App.UI.Models
 {
-    public class FamilyParametersModel
+    internal class FamilyParametersModel
     {
         public List<(string groupName, string parameterName)> AllParameters { get;private set; }
         = new List<(string groupName, string parameterName)>();

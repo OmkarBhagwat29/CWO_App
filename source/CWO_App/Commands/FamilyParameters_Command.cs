@@ -41,10 +41,10 @@ namespace CWO_App.Commands
         {
             var assembly = Assembly.GetExecutingAssembly();
             panel.AddItem(new PushButtonData(MethodBase.GetCurrentMethod().DeclaringType?.Name,
-                $"Family\nParameters", assembly.Location, MethodBase.GetCurrentMethod().DeclaringType?.FullName)
+                $"Family\nShared Parameters", assembly.Location, MethodBase.GetCurrentMethod().DeclaringType?.FullName)
             {
                 ToolTip = "Add and Delete Shared Parameters to families",
-                LargeImage = ImageUtils.LoadImage(assembly, "icon_32x32.png")
+                LargeImage = ImageUtils.LoadImage(assembly, "SharedParameters_32x32.png")
             });
 
         }

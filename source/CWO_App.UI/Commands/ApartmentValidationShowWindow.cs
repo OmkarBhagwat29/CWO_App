@@ -19,7 +19,7 @@ namespace CWO_App.UI.Commands
             if (WindowController.Focus<ApartmentValidation_Window>()) return;
 
             var view = serviceProvider.GetService<ApartmentValidation_Window>();
-            WindowController.Show(view, Process.GetCurrentProcess().MainWindowHandle);
+            WindowController.Show(view, Process.GetCurrentProcess().MainWindowHandle); 
         }
     }
 }

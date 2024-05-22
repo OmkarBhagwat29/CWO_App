@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿
 
 namespace CWO_App.UI.Constants
 {
@@ -13,5 +9,37 @@ namespace CWO_App.UI.Constants
         public const string TwoBedroomThreePerson_Name = "2 BED";
         public const string TwoBedroomFourPerson_Name = "2 BED(4)";
         public const string ThreeBedroom_Name = "3 BED";
+
+        public const string SharedParameterGroupName = "01. Apartments";
+        public const string CWO_APARTMENTS_TYPE = "Dwelling Type";
+
+        public const string CWO_APARTMENTS_NUMBER = "Number";
+        public const string CWO_APARTMENTS_MIN_AREA = "AreaReq";
+        public const string AreaWith10Percentage_ParamName = "%";
+        public const string CWO_APARTMENTS_BEDS = "Beds";
+        public const string CWO_APARTMENTS_PERSON = "Person";
+
+        public const string CWO_APARTMENTS_PROP_BED_AREA = "BedProp";
+        public const string CWO_APARTMENTS_MIN_BED_AREA = "BedReq";
+
+        public const string CWO_APARTMENTS_PROP_STORE_AREA = "StorProp";
+        public const string CWO_APARTMENTS_MIN_STORE_AREA = "StorReq";
+
+        public const string CWO_APARTMENTS_ABOVE_TEN_PERC = "10% excess";
+
+        public static readonly List<string> RequiredApartmentValidationParamNames = [
+
+            CWO_APARTMENTS_MIN_AREA,
+CWO_APARTMENTS_BEDS,
+CWO_APARTMENTS_PERSON,
+CWO_APARTMENTS_PROP_BED_AREA,
+CWO_APARTMENTS_MIN_BED_AREA,
+CWO_APARTMENTS_PROP_STORE_AREA,
+CWO_APARTMENTS_MIN_STORE_AREA,
+CWO_APARTMENTS_ABOVE_TEN_PERC,
+CWO_APARTMENTS_TYPE,
+CWO_APARTMENTS_NUMBER,
+
+            ];
     }
 }

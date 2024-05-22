@@ -5,7 +5,6 @@ using CWO_App.UI.Utils;
 using CWO_App.UI.Views.SharedParameterViews;
 using Microsoft.Extensions.Logging;
 using Microsoft.Win32;
-using Microsoft.WindowsAPICodePack.Dialogs;
 using Nice3point.Revit.Toolkit.External.Handlers;
 using RevitCore.Extensions;
 using RevitCore.Extensions.Parameters;
@@ -20,6 +19,12 @@ using System.Threading.Tasks;
 using System.Windows.Controls;
 using System.Windows.Data;
 
+#if NET48
+using System.Windows.Forms;
+#endif
+
+
+
 namespace CWO_App.UI.ViewModels.SharedParametersViewModels
 {
     public sealed partial class FamilyParameters_ViewModel: ObservableObject
@@ -33,7 +38,7 @@ namespace CWO_App.UI.ViewModels.SharedParametersViewModels
 
         private FamilyParametersModel _model;
 
-        private static string lastOpenedFolder = "";
+        private static string lastOpenedFolder = "C:\\Users";
         private static readonly List<ParameterGroupInfo> ParameterGroups = ParameterExtension.GetParameterGroups().OrderBy(g=>g.Name).ToList();
 
 
@@ -282,18 +287,34 @@ namespace CWO_App.UI.ViewModels.SharedParametersViewModels
         [RelayCommand]
         private async Task SelectFamilyFolder()
         {
-            CommonOpenFileDialog dialog = new CommonOpenFileDialog();
-            dialog.InitialDirectory = "C:\\Users";
+#if NET8_0_OR_GREATER
+            // Create a new instance of FolderBrowserDialog
+            OpenFolderDialog dialog = new OpenFolderDialog();
+            dialog.InitialDirectory = "lastOpenedFolder";
 
             if(lastOpenedFolder != string.Empty)
                 dialog.InitialDirectory = lastOpenedFolder;
 
-            dialog.IsFolderPicker = true;
-            if (dialog.ShowDialog() == CommonFileDialogResult.Ok)
+            if ((bool)dialog.ShowDialog())
             {
               //  MessageBox.Show("You selected: " + dialog.FileName);
-                lastOpenedFolder = dialog.FileName;
+                lastOpenedFolder = dialog.FolderName;
             }
+#else
+            FolderBrowserDialog folderBrowserDialog = new FolderBrowserDialog();
+           
+        // Set the initial directory (optional)
+        folderBrowserDialog.SelectedPath = lastOpenedFolder;
+
+        // Show the dialog and capture the result
+        DialogResult result = folderBrowserDialog.ShowDialog();
+
+        if (result == DialogResult.OK)
+        {
+            // Get the selected folder path
+            lastOpenedFolder = folderBrowserDialog.SelectedPath;
+        }
+#endif
 
             var rfaFiles = Directory.GetFiles(lastOpenedFolder, "*.rfa").ToList();
             if (rfaFiles.Count == 0)
@@ -379,7 +400,7 @@ namespace CWO_App.UI.ViewModels.SharedParametersViewModels
 
         }
 
-        public void RowParamMultipleSelection(IList selectedRowItem, CheckBox checkBox) {
+        public void RowParamMultipleSelection(IList selectedRowItem, System.Windows.Controls.CheckBox checkBox) {
 
             foreach (var selectedItem in selectedRowItem)
             {
@@ -392,7 +413,7 @@ namespace CWO_App.UI.ViewModels.SharedParametersViewModels
             }
         }
 
-        public void RowInstanceMultipleSelection(IList selectedRowItem, CheckBox checkBox)
+        public void RowInstanceMultipleSelection(IList selectedRowItem, System.Windows.Controls.CheckBox checkBox)
         {
             foreach (var selectedItem in selectedRowItem)
             {
@@ -406,7 +427,7 @@ namespace CWO_App.UI.ViewModels.SharedParametersViewModels
         }
 
 
-        public void RowFamilyMultipleSelection(IList selectedRowItem, CheckBox checkBox)
+        public void RowFamilyMultipleSelection(IList selectedRowItem, System.Windows.Controls.CheckBox checkBox)
         {
             foreach (var selectedItem in selectedRowItem)
             {

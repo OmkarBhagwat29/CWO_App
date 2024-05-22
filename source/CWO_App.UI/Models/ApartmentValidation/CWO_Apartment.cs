@@ -2,11 +2,13 @@
 using Autodesk.Revit.DB.Architecture;
 using CWO_App.UI.Constants;
 using CWO_App.UI.Requirements;
+using Microsoft.Extensions.Logging;
 using RevitCore.Extensions;
 using RevitCore.ResidentialApartments;
 using RevitCore.ResidentialApartments.Rooms;
 using RevitCore.ResidentialApartments.Validation;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement.ToolTip;
+using System.Runtime.CompilerServices;
+
 
 
 
@@ -14,6 +16,7 @@ namespace CWO_App.UI.Models.ApartmentValidation
 {
     public class CWO_Apartment : Apartment
     {
+
         public CWO_Apartment(ApartmentType _type,
         Area areaBoundary)
         {
@@ -23,38 +26,31 @@ namespace CWO_App.UI.Models.ApartmentValidation
 
         public override ApartmentType Type { get; }
 
-        public override void Validate()
-        {
-            //apartment level validation
-            this.ApartmentValidationData.ForEach(d=>d.Validate());
 
-            //room level validation
-            this.Rooms.ForEach(r=>r.RoomValidationData.ForEach(d=>d.Validate()));
-        }
-
-        public static CWO_Apartment CreateApartment(Area areaBoundary, List<Room> rooms, ApartmentStandards standards)
+        public static CWO_Apartment CreateApartment(Area areaBoundary, List<Room> rooms,
+            ApartmentStandards standards, ILogger _logger)
         {
-            //TODO:: Check paramExistance outside
-            //var nameParam = rooms[0].LookupParameter(standards.ParameterNames.RoomType) ??
-            //    throw new ArgumentNullException($"{standards.ParameterNames.RoomType} - parameter does not exist." +
-            //    $"\nThis parameter defines room type(eg. Bedroom,Kitchen)\n and is necessary to set.");
 
             var allBedrooms = rooms.Where(r => 
-            r.LookupParameter(standards.ParameterNames.RoomType).AsString()
+            r.LookupParameter(RoomValidationConstants.RoomName_ParamName).AsString()
             .Contains(standards.RoomTypes["Bedroom"],
             StringComparison.CurrentCultureIgnoreCase)).ToList();
+
+            var bathrooms = rooms.Where(r =>
+            r.LookupParameter("Name").AsString()
+            .Contains("bathroom", StringComparison.CurrentCultureIgnoreCase)).ToList();
 
             //this is a studio
             CWO_Apartment apt = null;
             AreaWidthValidationData areaWidthValidationData = null;
-            if (!allBedrooms.Any())
+            if (allBedrooms.Count == 0 && bathrooms.Count == 1)
             {
-                apt = new(ApartmentType.Studio, areaBoundary) {Name = ApartmentValidationConstants.Studio_Name };
+                apt = new(ApartmentType.Studio, areaBoundary) {Name = ApartmentValidationConstants.Studio_Name, Occupancy = 2 };
                 areaWidthValidationData = standards.GetStandardsForApartment(ApartmentType.Studio);
             }
             else if (allBedrooms.Count() == 1)
             {
-                apt = new(ApartmentType.One_Bedroom, areaBoundary) { Name = ApartmentValidationConstants.OneBedRoom_Name }; ;
+                apt = new(ApartmentType.One_Bedroom, areaBoundary) { Name = ApartmentValidationConstants.OneBedRoom_Name, Occupancy = 3 }; ;
                 areaWidthValidationData = standards.GetStandardsForApartment(ApartmentType.One_Bedroom);
             }
             else if (allBedrooms.Count() == 2)
@@ -83,12 +79,20 @@ namespace CWO_App.UI.Models.ApartmentValidation
                 if ((achievedBoundaryArea <= minArea_3Person || achievedBoundaryArea >= minArea_3Person)
                     && achievedBoundaryArea <= minArea_4Person)
                 {
-                    apt = new(ApartmentType.Two_Bedroom_3_Person, areaBoundary) { Name = ApartmentValidationConstants.TwoBedroomThreePerson_Name };
+                    apt = new(ApartmentType.Two_Bedroom_3_Person, areaBoundary)
+                    {
+                        Name = ApartmentValidationConstants.TwoBedroomThreePerson_Name,
+                        Occupancy = 3
+                    };
                     areaWidthValidationData = standards.GetStandardsForApartment(ApartmentType.Two_Bedroom_3_Person);
                 }
                 else
                 {
-                    apt = new(ApartmentType.Two_Bedroom_4_Person, areaBoundary) { Name = ApartmentValidationConstants.TwoBedroomFourPerson_Name };
+                    apt = new(ApartmentType.Two_Bedroom_4_Person, areaBoundary)
+                    {
+                        Name = ApartmentValidationConstants.TwoBedroomFourPerson_Name,
+                        Occupancy = 4
+                    };
                     areaWidthValidationData = standards.GetStandardsForApartment(ApartmentType.Two_Bedroom_4_Person);
                 }
 
@@ -98,9 +102,17 @@ namespace CWO_App.UI.Models.ApartmentValidation
                 apt = new(ApartmentType.Three_Bedroom, areaBoundary) { Name = ApartmentValidationConstants.ThreeBedroom_Name };
                 areaWidthValidationData = standards.GetStandardsForApartment(ApartmentType.Three_Bedroom);
             }
+            else
+            {
+                string error = $"For Area Boundary Id {areaBoundary.Id}, No apartment type found!!!\n" +
+                $"Number of Spaces Contains {rooms.Count}.\n" +
+                $"Check setting file if the Apartment Type exists.";
 
-            if (apt == null)
+                _logger.LogError(error);
+
                 return null;
+            }
+
 
             AddRoomsToApartment(apt,rooms, standards, areaWidthValidationData);
             AddValidationData(apt, areaWidthValidationData);
@@ -109,7 +121,7 @@ namespace CWO_App.UI.Models.ApartmentValidation
         }
 
         public static List<CWO_Apartment> CreateApartmentsAndSetApartmentTypeInProject(
-            Document doc,
+            Document doc, ILogger _logger,
             List<AreaRoomAssociation> associations,
             ApartmentStandards standards)
         {
@@ -117,59 +129,23 @@ namespace CWO_App.UI.Models.ApartmentValidation
 
             foreach (var ass in associations)
             {
-                var apt = CreateApartment(ass.AreaBoundary,ass.Rooms,standards);
+                var apt = CreateApartment(ass.AreaBoundary,ass.Rooms,standards,_logger);
 
                 if (apt == null)
-                    continue;
-
-                var element = doc.GetElement(ass.AreaBoundary.Id);
-                var apartmentTypeParam = element.LookupParameter(standards.ParameterNames.ApartmentType);
-                bool success = apartmentTypeParam.Set(apt.Name);
-                if (!success)
-                    throw new ArgumentException($"Unable to set value for parameter '{standards.ParameterNames.ApartmentType}'");
-
-                apts.Add(apt);
-            }
-            return apts;
-        }
-
-        public static List<CWO_Apartment> CreateApartments(List<AreaRoomAssociation>associations,
-            ApartmentStandards standards)
-        {
-            List<CWO_Apartment> apts = [];
-
-            foreach (AreaRoomAssociation ass in associations)
-            {
-                var param = ass.AreaBoundary.LookupParameter(standards.ParameterNames.ApartmentType) ?? throw new ArgumentNullException($"Unable to find Apartment Type.\n" +
-                    $"Check if {standards.ParameterNames.ApartmentType} parameter exists for Selected Apartment Area Boundary.");
-                var apartmentTypeName = param.AsString();
-
-                var apartmentType = standards.FindApartmentType(apartmentTypeName);
-                if (apartmentType == ApartmentType.None)
                 {
                     continue;
-                    //throw new ArgumentNullException($"Unable to find Apartment Type.\n" +
-                    //    $"Check if {standards.ParameterNames.ApartmentType} parameter value is set to according to standards.");
                 }
-                CWO_Apartment apt = new(apartmentType, ass.AreaBoundary);
 
-                //get validation data
-                var validationData = standards.GetStandardsForApartment(apartmentType) ??
-                    throw new ArgumentNullException($"Unable to find Apartment Type Standards.\n" +
-                        $"Check .json settings file if for apartment name.");
+                var element = doc.GetElement(ass.AreaBoundary.Id);
+                //set apartment type
+                var apartmentTypeParam = element.LookupParameter(ApartmentValidationConstants.CWO_APARTMENTS_TYPE);
 
-                AddRoomsToApartment(apt,ass.Rooms,standards,validationData);
-                AddValidationData(apt,validationData);
+                if(apartmentTypeParam != null)
+                    apartmentTypeParam.Set(apt.Name);
 
                 apts.Add(apt);
             }
-
             return apts;
-        }
-
-        public static void ValidateApartments(List<CWO_Apartment> apartments)
-        {
-            apartments.ForEach(apt=>apt.Validate());
         }
 
         private static void AddRoomsToApartment(CWO_Apartment apartment,
@@ -178,7 +154,7 @@ namespace CWO_App.UI.Models.ApartmentValidation
         {
             foreach (var rm in rooms)
             {
-                var param = rm.LookupParameter(standards.ParameterNames.RoomType);
+                var param = rm.LookupParameter(RoomValidationConstants.RoomName_ParamName);
                 if (param == null)
                     continue;
                 var val = param.AsString();
@@ -224,18 +200,17 @@ namespace CWO_App.UI.Models.ApartmentValidation
                         MinimumWidth = validationData.MinimumBedroomWidth
                     };
 
-                    apartment.AddRoom(new Bedroom(rm));
+                    apartment.AddRoom(bedroom);
                 }
                 else if (val.Equals(RoomValidationConstants.Bedroom_1_Name,
                     StringComparison.CurrentCultureIgnoreCase))
                 {
-                    var bedroom = new Bedroom(rm)
-                    {
-                        Name = RoomValidationConstants.Bedroom_1_Name,
-                        MinimumWidth = validationData.MinimumBedroomWidth
-                    };
+                    var bedroom = new Bedroom(rm);
 
-                    apartment.AddRoom(new Bedroom(rm));
+                    bedroom.Name = RoomValidationConstants.Bedroom_1_Name;
+                    bedroom.MinimumWidth = validationData.MinimumBedroomWidth;
+                   
+                    apartment.AddRoom(bedroom);
                 }
                 else if (val.Equals(RoomValidationConstants.Bedroom_2_Name,
                     StringComparison.CurrentCultureIgnoreCase))
@@ -246,7 +221,7 @@ namespace CWO_App.UI.Models.ApartmentValidation
                         MinimumWidth = validationData.MinimumBedroomWidth
                     };
 
-                    apartment.AddRoom(new Bedroom(rm));
+                    apartment.AddRoom(bedroom);
                 }
                 else if (val.Equals(RoomValidationConstants.Bedroom_3_Name,
                     StringComparison.CurrentCultureIgnoreCase))
@@ -257,7 +232,7 @@ namespace CWO_App.UI.Models.ApartmentValidation
                         MinimumWidth = validationData.MinimumBedroomWidth
                     };
 
-                    apartment.AddRoom(new Bedroom(rm));
+                    apartment.AddRoom(bedroom);
                 }
             }
         }
@@ -265,39 +240,52 @@ namespace CWO_App.UI.Models.ApartmentValidation
         private static void AddValidationData(CWO_Apartment apartment,
             AreaWidthValidationData validationData)
         {
-            AreaValidation v = new(apartment.AreaBoundary,
+            //apartment area validation
+            AreaValidation v = new(apartment.AreaBoundary.Area.ToUnit(UnitTypeId.SquareMeters),
                validationData.MinimumFloorArea);
 
             apartment.AddValidationData(v);
 
             //collect bedrooms add area validation data to apartment
-            var bedrooms = apartment.Rooms.Where(r=> r is Bedroom)
-                .Select(r=>r.Room as SpatialElement).ToList();
-
-            AggregateAreaValidation agv = new(bedrooms,
-    validationData.MinimumAggregateBedroomAreas);
+            var bedroomAreas = apartment.Rooms.Where(r=> r is Bedroom)
+                .Select(b=>b.Room.Area.ToUnit(UnitTypeId.SquareMeters))
+                .ToList();
+            
+            AggregateAreaValidation agv = new(bedroomAreas,
+    validationData.MinimumAggregateBedroomAreas,typeof(CWO_Apartment));
             apartment.AddValidationData(agv);
+
+            CombinedAreaValidation cbV = new(bedroomAreas, validationData.MinimumAggregateBedroomAreas.Sum(), typeof(Bedroom));
+            apartment.AddValidationData(cbV);
 
 
             //collect storage and validate with area
-            var storages = apartment.Rooms.Where(r => r is Storage)
-                .Select(r => r.Room as SpatialElement).ToList();
-
-            CombinedAreaValidation caV = new(storages, validationData.MinimumStorageArea);
+            var storeAreas = apartment.Rooms.Where(r => r is Storage)
+                .Select(r=>r.Room.Area.ToUnit(UnitTypeId.SquareMeters))
+                .ToList();
+            CombinedAreaValidation caV = new(storeAreas, validationData.MinimumStorageArea, typeof(Storage));
             apartment.AddValidationData(caV);
 
 
             foreach (var room in apartment.Rooms)
             {
-                if (room is not Bedroom && room is not Storage)
+                if (room is KLD klD)
                 {
-                    AreaValidation aV = new(room.Room, room.MinimumArea);
+                    AreaValidation aV = new(room.Room.Area.ToUnit(UnitTypeId.SquareMeters), room.MinimumArea);
                     room.AddValidationData(aV);
                 }
 
                 if (room is not Storage)
                 {
-                    DimensionValidation dV = new(room.Room, room.MinimumWidth);
+
+                    var sebOptions = new SpatialElementBoundaryOptions
+                    {
+                        SpatialElementBoundaryLocation = SpatialElementBoundaryLocation.Finish,
+                    };
+
+                    var roomSolid = room.ComputeRoomSolid(sebOptions, out List<XYZ> roomBoundaryPoints);
+
+                    DimensionValidation dV = new(roomSolid, roomBoundaryPoints, room.MinimumWidth, room.GetType());
                     room.AddValidationData(dV);
                 }
             }

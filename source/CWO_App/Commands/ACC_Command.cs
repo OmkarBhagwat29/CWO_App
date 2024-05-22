@@ -45,7 +45,7 @@ namespace CWO_App.Commands
                 $"To Hub", assembly.Location, MethodBase.GetCurrentMethod().DeclaringType?.FullName)
             {
                 ToolTip = "Launch CWO ACC Hub",
-                LargeImage = ImageUtils.LoadImage(assembly, "icon_32x32.png")
+                LargeImage = ImageUtils.LoadImage(assembly, "ACC_Hub_32x32.png")
             });
 
         }

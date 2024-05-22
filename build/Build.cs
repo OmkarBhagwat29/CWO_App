@@ -7,6 +7,7 @@ sealed partial class Build : NukeBuild
     Project[] Bundles;
     Dictionary<Project, Project> InstallersMap;
 
+    [Secret] [Parameter] string GitHubToken;
     [GitRepository] readonly GitRepository GitRepository;
     [Solution(GenerateProjects = true)] Solution Solution;
 

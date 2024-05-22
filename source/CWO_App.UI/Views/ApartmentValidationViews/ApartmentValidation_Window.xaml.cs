@@ -37,5 +37,22 @@ namespace CWO_App.UI.Views.ApartmentValidationViews
         {
             _windowService.RaiseWindowOpened();
         }
+
+        private void ListViewItem_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            if (sender is ListViewItem listViewItem)
+            {
+                var content = listViewItem.Content;
+                if (content != null)
+                {
+                    var viewModel = DataContext as ApartmentValidation_ViewModel;
+                    if (viewModel != null && viewModel.ItemDoubleClickCommand.CanExecute(content))
+                    {
+                        viewModel.ItemDoubleClickCommand.Execute(content);
+                    }
+                }
+            }
+
+        }
     }
 }

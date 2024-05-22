@@ -3,9 +3,14 @@ using CWO_App.UI.Requirements;
 using CWO_App.UI.Services;
 using Microsoft.Extensions.Logging;
 using Nice3point.Revit.Toolkit.External.Handlers;
-using RevitCore.ResidentialApartments;
 using RevitCore.Extensions;
 using System.Collections.ObjectModel;
+using Autodesk.Revit.UI;
+using CWO_App.UI.Utils;
+using CWO_App.UI.Views.ApartmentValidationViews;
+using Autodesk.Revit.DB.Architecture;
+using System.Windows.Input;
+using CWO_App.UI.Constants;
 
 //when manual mode is switched on
 
@@ -20,30 +25,71 @@ namespace CWO_App.UI.ViewModels.ApartmentValidation
             WindowService = windowService;
 
             WindowService.WindowOpened += OnWindowOpened;
+
+            ItemDoubleClickCommand = new RelayCommand<ValidationResult>(OnItemDoubleClick);
         }
 
+
+
+        Element _roomElement;
+        Element _areaElement;
         private void OnWindowOpened(object sender, EventArgs e)
         {
-            //TODO:: Check Shared Parameter File is attached
+            try
+            {
+               _standards = ApartmentStandards.LoadFromJson();
+                if (_standards == null)
+                {
+                    TaskDialog.Show("Message", "Unable to read Validation Standard File. Please Check the file!!!");
+                    return;
+                }
 
-            //TODO:: FInd all necessary parameters from standards
-            //if not there add there ask user if wants add those parameters
-            //as it is required for validation
+                //Validate
+                _externalHandler.Raise((uiApp) => {
 
-            //Validate
-            _externalHandler.Raise((uiApp) => {
+                    var spatialElements = uiApp.ActiveUIDocument.Document
+                    .GetElements<SpatialElement>();
+                    _areaElement = spatialElements.Where(e => e is Area).FirstOrDefault();
 
-                    var element = uiApp.ActiveUIDocument.Document
-                    .GetElements<SpatialElement>().First()
-                    ?? throw new ArgumentNullException($"No areas or rooms found");
+                    if (_areaElement == null)
+                    {
+                        TaskDialog.Show("Message", "No Areas found in the Project");
 
-                    var aptTypeParam = element.LookupParameter(_standards.ParameterNames.ApartmentType)
-                        ?? throw new ArgumentNullException($"Parameter {_standards.ParameterNames.ApartmentType} Not Found for Areas & Rooms");
-                    var roomTypeParam = element.LookupParameter(_standards.ParameterNames.RoomType)
-                        ?? throw new ArgumentNullException($"Parameter {_standards.ParameterNames.RoomType} Not Found for Rooms");
+                        WindowController.Close<ApartmentValidation_Window>();
 
+                        return;
+                    }
+
+                    _roomElement = spatialElements.Where(e => e is Room).FirstOrDefault();
+
+                    if (_roomElement == null)
+                    {
+                        TaskDialog.Show("Message", "No Rooms found in the Project");
+
+                        WindowController.Close<ApartmentValidation_Window>();
+
+                        return;
+                    }
+
+                    _model = new ApartmentValidationModel(_logger, uiApp, _standards);
+
+                    _model.CheckRequiredParametersExists(_areaElement, _roomElement, out List<string> missingParams);
+
+                    if (missingParams.Count > 0)
+                    {
+                        TaskDialog.Show("Message", String.Join(Environment.NewLine,missingParams)); 
+
+                       // WindowController.Close<ApartmentValidation_Window>();
+
+                        return;
+                    }
                 });
-            
+            }
+            catch (Exception)
+            {
+                WindowController.Close<ApartmentValidation_Window>();
+                return;
+            }
         }
 
         private readonly ILogger _logger;
@@ -55,14 +101,28 @@ namespace CWO_App.UI.ViewModels.ApartmentValidation
         private readonly AsyncEventHandler _asyncExternalHandler = new();
         private readonly AsyncEventHandler<ElementId> _asyncIdExternalHandler = new();
 
-        private static readonly ApartmentStandards _standards = ApartmentStandards.LoadFromJson();
+        private static ApartmentStandards _standards = null;
 
-        [ObservableProperty] private bool _isStudioGridVisible = true;
-        [ObservableProperty] private bool _isOneBedGridVisible;
-        [ObservableProperty] private bool _isTwoBedGridVisible;
+        [ObservableProperty]private ObservableCollection<ValidationResult> _widthValidationResults = [];
+        [ObservableProperty]private ObservableCollection<ValidationResult> _areaValidationResults = [];
 
-        [ObservableProperty] private ObservableCollection<string> _statusTypes = [];
-        [ObservableProperty] private string _selectedStatusType;
+
+        public ICommand ItemDoubleClickCommand { get; }
+
+        private void OnItemDoubleClick(object validationObject)
+        {
+            var validationResult = validationObject as ValidationResult;
+            if (validationResult != null)
+            {
+                _externalHandler.Raise(uiApp =>
+                {
+                    var uiDoc = uiApp.ActiveUIDocument;
+
+                    uiDoc.Selection.SetElementIds([validationResult.Element_Id]);
+                });
+            }
+        }
+
 
 
         [RelayCommand]
@@ -72,18 +132,129 @@ namespace CWO_App.UI.ViewModels.ApartmentValidation
             {
                await _asyncExternalHandler.RaiseAsync((uiApp) => {
 
-                    _model = new ApartmentValidationModel(uiApp, _standards);
+                   _model.SetAreaRoomAssociation();
+                   _model.SetApartments();
+                   _model.Validate();
 
-                    _model.RunStartToEnd();
+                   if (_model.Apartments.Count == 0)
+                   {
+                       TaskDialog.Show("Message", "No Apartments Found");
+                   }
                 });
 
-                var apartmentsGroup = _model.Apartments.GroupBy(apt => apt.Type).ToList();
+                this.WidthValidationResults.Clear();
+                this.AreaValidationResults.Clear();
 
-                //set dataGrids here
+                _model
+                    .GetFailedValidation(out List<ValidationResult> widthFailedResults,
+                    out List<ValidationResult> areaFailedResults);
+
+                foreach (var result in widthFailedResults)
+                {
+                    this.WidthValidationResults.Add(result);
+                }
+
+                foreach (var result in areaFailedResults)
+                {
+                    this.AreaValidationResults.Add(result);
+                }
+
             }
             catch (Exception)
             {
+                TaskDialog.Show("Error", "Validation Failed.");
+            }
+        }
 
+        [RelayCommand]
+        public async Task SetValidationParameters()
+        {
+            if (_model == null)
+            {
+                TaskDialog.Show("Message", "Assign Validation Parameters before setting parameters.\nUse Assign Parameters Button");
+                return;
+            }
+
+            try
+            {
+                await _asyncExternalHandler.RaiseAsync((uiApp) => {
+
+                    var doc = uiApp.ActiveUIDocument.Document;
+
+                    doc.UseTransaction(() => { 
+                    
+                        _model.SetApartmentParameters();
+
+                    });
+                                    
+                });
+
+                TaskDialog.Show("Message", "Validation Parameters set to Areas and Rooms Successfully.");
+            }
+            catch (Exception)
+            {
+                TaskDialog.Show("Error", "Unable to set validation parameters to Areas and Rooms.");
+            }
+
+        }
+
+        /// <summary>
+        /// Use this to create shared parameters
+        /// </summary>
+        /// <returns></returns>
+        public async Task AssignValidationParameters()
+        {
+            this.AreaValidationResults.Clear();
+            this.WidthValidationResults.Clear();
+            try
+            {
+                await _asyncExternalHandler.RaiseAsync((uiApp) =>
+                {
+                    _model = new ApartmentValidationModel(_logger, uiApp, _standards);
+
+                    var definitionFile = uiApp.Application.OpenSharedParameterFile();
+                    if (definitionFile == null)
+                    {
+                        TaskDialog.Show("Message", "No Shared Parameter File Found, Please create on to Procced");
+
+                        WindowController.Close<ApartmentValidation_Window>();
+
+                        return;
+                    }
+                    _model.SetDefinitionFile(definitionFile);
+
+                    _model.CreateAndAssignRequiredParameters(_areaElement, _roomElement);
+
+                    TaskDialog.Show("Message", "Validation Parameters Assigned to Room and Areas Successfully");
+                });
+            }
+            catch (Exception)
+            {
+                TaskDialog.Show("Error", "Can not assign validation parameters to the project");
+                return;
+            }
+
+        }
+
+        [RelayCommand]
+        public async Task CreateSchedules()
+        {
+            try
+            {
+                await _asyncExternalHandler.RaiseAsync((uiApp) => {
+
+                    //get area scheme iD
+                    //var scheme = uiApp.ActiveUIDocument
+                    // .Document
+                    // .GetElements<AreaScheme>()
+                    // .FirstOrDefault(s => s.Name == this.SelectedAreaSchemeName);
+
+                    //_model.CreateAreaValidationSchedule(scheme.Id);
+                });
+
+            }
+            catch (Exception)
+            {
                 throw;
             }
         }

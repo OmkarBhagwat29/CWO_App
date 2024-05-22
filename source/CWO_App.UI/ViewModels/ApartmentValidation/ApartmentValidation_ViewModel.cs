@@ -73,7 +73,7 @@ namespace CWO_App.UI.ViewModels.ApartmentValidation
 
                     _model = new ApartmentValidationModel(_logger, uiApp, _standards);
 
-                    _model.CheckRequiredParametersExists(_areaElement, _roomElement, out List<string> missingParams);
+                    ApartmentValidationModel.CheckRequiredParametersExists(_areaElement, _roomElement, out List<string> missingParams);
 
                     if (missingParams.Count > 0)
                     {

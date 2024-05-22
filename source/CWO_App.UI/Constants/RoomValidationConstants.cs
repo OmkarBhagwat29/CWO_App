@@ -20,13 +20,11 @@ namespace CWO_App.UI.Constants
 
         public const string RoomName_ParamName = "Name";
         public const string CWO_ROOMS_APT_NUM = "CWO_ROOMS_APT_NUM";
-        public const string CWO_ROOMS_PROP_WIDTH = "AchWidth";
-        public const string CWO_ROOMS_MIN_WIDTH = "ReqWidth";
-        //public const string WidthAccuracy_ParamName = "Width Accuracy";
+        public const string CWO_ROOMS_PROP_WIDTH = "CWO_ROOMS_PROP_WIDTH";
+        public const string CWO_ROOMS_MIN_WIDTH = "CWO_ROOMS_MIN_WIDTH";
 
         public const string AchievedArea_ParamName = "Area";
-        public const string CWO_ROOMS_MIN_AREA = "ReqArea";
-        //public const string AreaDifference_ParamName = "DiffArea";
+        public const string CWO_ROOMS_MIN_AREA = "CWO_ROOMS_MIN_AREA";
 
 
         public static readonly List<string> RequiredRoomValidationParamNames =

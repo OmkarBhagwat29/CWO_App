@@ -106,46 +106,6 @@ namespace CWO_App.UI.Models.ApartmentValidation
             }
         }
 
-        private static bool ValidateRequiredParamValues(CWO_Apartment apartment, out List<string> messages)
-        {
-            // apartment type and room type
-            messages = new List<string>();
-            bool success = true;
-
-            var apartmentType = apartment.AreaBoundary.LookupParameter(ApartmentValidationConstants.CWO_APARTMENTS_TYPE);
-
-            var apartmentTypeValue = apartmentType.AsString();
-
-            if (apartmentTypeValue == null || apartmentTypeValue == string.Empty)
-            {
-                success = false;
-
-                messages.Add($"ElementID: {apartment.AreaBoundary.Id}" +
-                    $"Type: Apartment Area Boundary" +
-                    $"Parameter Name: {ApartmentValidationConstants.CWO_APARTMENTS_TYPE}" +
-                    $"Reason: Parameter Value Not Set\n\n");
-            }
-
-            foreach (var room in apartment.Rooms)
-            {
-                var roomNameParam = room.Room.LookupParameter(RoomValidationConstants.RoomName_ParamName);
-
-                var roomNameParamValue = roomNameParam.AsString();
-
-                if (roomNameParamValue == null || roomNameParamValue == string.Empty)
-                {
-                    success = false;
-
-                    messages.Add($"ElementID: {room.Room.Id}" +
-                    $"Type: Room in inside Apartment ElementID {apartment.AreaBoundary.Id}" +
-                    $"Parameter Name: {RoomValidationConstants.RoomName_ParamName}" +
-                    $"Reason: Parameter Value Not Set\n\n");
-                }
-            }
-
-            return success;
-        }
-
         public void GetFailedValidation(out List<ValidationResult> widthFailedResults,
             out List<ValidationResult> areaFailedResults)
         {
@@ -158,9 +118,18 @@ namespace CWO_App.UI.Models.ApartmentValidation
 
             this.Apartments.ForEach(apt =>
             {
+
+                var aptNumberParam = apt.AreaBoundary.LookupParameter(ApartmentValidationConstants.CWO_APARTMENTS_NUMBER);
+
+                var aptNumber = aptNumberParam?.AsValueString();
+
+                aptNumber ??= apt.Name;
+
                 //apartment validation
                 apt.ApartmentValidationData.ForEach(aV =>
                 {
+
+
                     if (!aV.ValidationSuccess)
                     {
                         string message = aV.GetValidationReport();
@@ -192,7 +161,7 @@ namespace CWO_App.UI.Models.ApartmentValidation
                             }
                             if (added)
                             {
-                                string title = $"Apartment Number: {apt.Name}\n" +
+                                string title = $"Apartment Number: {aptNumber}\n" +
                                 $"Apartment Element Id: {apt.AreaBoundary.Id}";
                                 sB.AppendLine(title);
                                 sB.AppendLine(info);
@@ -210,7 +179,7 @@ namespace CWO_App.UI.Models.ApartmentValidation
                         {
                             StringBuilder sB = new StringBuilder();
 
-                            string title = $"Apartment Number: {apt.Name}\n" +
+                            string title = $"Apartment Number: {aptNumber}\n" +
                             $"Apartment Element ID: {apt.AreaBoundary.Id}\n" +
                             $"Apartment Achieved Area: {Math.Round(areaV.AchievedArea, 2)}\n" +
                             $"Apartment Required Area: {areaV.RequiredArea}";
@@ -232,7 +201,7 @@ namespace CWO_App.UI.Models.ApartmentValidation
                         {
                             StringBuilder sB = new StringBuilder();
                             // this is for storage
-                            string title = $"Apartment Number: {apt.Name}\n" +
+                            string title = $"Apartment Number: {aptNumber}\n" +
                                $"Apartment Element Id: {apt.AreaBoundary.Id}";
 
                             sB.AppendLine(title);
@@ -281,11 +250,10 @@ namespace CWO_App.UI.Models.ApartmentValidation
                         {
                             if (v is DimensionValidation dV)
                             {
-
                                 StringBuilder sB = new StringBuilder();
 
                                 string tilte =
-                                $"Apartment Number: {apt.Name}\n" +
+                                $"Apartment Number: {aptNumber}\n" +
                                 $"Room Name: {r.Name}\n" +
                                 $"Room Element ID: {r.Room.Id}\n" +
                                 $"Achieved Width: {Math.Round(dV.AchievedMinWidth, 2)}\n" +
@@ -315,7 +283,7 @@ namespace CWO_App.UI.Models.ApartmentValidation
                                 {
                                     StringBuilder sB = new StringBuilder();
 
-                                    string title = $"Apartment Number: {apt.Name}\n" +
+                                    string title = $"Apartment Number: {aptNumber}\n" +
                                     $"Room Name: {r.Name}\n" +
                                     $"Room Element ID: {r.Room.Id}\n" +
                                     $"Achieved Area: {Math.Round(aV.AchievedArea, 2)}\n" +
@@ -435,7 +403,7 @@ namespace CWO_App.UI.Models.ApartmentValidation
         }
 
 
-        public void CheckRequiredParametersExists(Element areaElement, Element roomElement,
+        public static void CheckRequiredParametersExists(Element areaElement, Element roomElement,
             out List<string> messages)
         {
             messages = [];

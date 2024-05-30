@@ -21,12 +21,16 @@ namespace CWO_App
                 Application.CreateRibbonTab(tabName);
 
                 string parameterPanelName = "Parameters";
-                string validationPanelName = "Validation";
+                string validationPanelName = "Apartment Validation";
+                string GeneralPanelName = "General";
                 string accPanelName = "ACC";
 
                var parametersPanel = Application.CreatePanel(parameterPanelName, tabName);
 
                 var validationPanel = Application.CreatePanel(validationPanelName, tabName);
+
+                var generalPanel = Application.CreatePanel(GeneralPanelName, tabName);
+
 
                 var accPanel = Application.CreatePanel(accPanelName, tabName);
 
@@ -35,6 +39,8 @@ namespace CWO_App
 
 
                 ApartmentValidation_Command.CreateApartmentValidationButton(validationPanel);
+
+                CreateKeynotes_Command.CreateKeynotesCreationButton(generalPanel);
 
                 ACC_Command.LaunchACCButton(accPanel);
             }

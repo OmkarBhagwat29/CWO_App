@@ -30,7 +30,6 @@ namespace CWO_App.UI.ViewModels.ApartmentValidation
         }
 
 
-
         Element _roomElement;
         Element _areaElement;
         private void OnWindowOpened(object sender, EventArgs e)
@@ -124,7 +123,6 @@ namespace CWO_App.UI.ViewModels.ApartmentValidation
         }
 
 
-
         [RelayCommand]
         public async Task Validate()
         {
@@ -158,6 +156,8 @@ namespace CWO_App.UI.ViewModels.ApartmentValidation
                 {
                     this.AreaValidationResults.Add(result);
                 }
+
+                TaskDialog.Show("Message", "Validation Completed!!!");
 
             }
             catch (Exception)

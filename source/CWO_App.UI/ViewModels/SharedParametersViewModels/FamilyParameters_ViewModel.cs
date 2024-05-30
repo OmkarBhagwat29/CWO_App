@@ -223,13 +223,13 @@ namespace CWO_App.UI.ViewModels.SharedParametersViewModels
                     uiApp.ActiveUIDocument.Document.UseTransaction(() => uiApp.ActiveUIDocument.Document.Regenerate(), "Regenerate");
 
                    if(success)
-                        Autodesk.Revit.UI.TaskDialog.Show("Message", "Shared Parameters added to Families!!!");
+                        TaskDialog.Show("Message", "Shared Parameters added to Families!!!");
 
                });
             }
             catch
             {
-                Autodesk.Revit.UI.TaskDialog.Show("Error", "Unable to add Shared Parameters to Families!!!");
+               TaskDialog.Show("Error", "Unable to add Shared Parameters to Families!!!");
                 
             }
 
@@ -269,7 +269,7 @@ namespace CWO_App.UI.ViewModels.SharedParametersViewModels
                     uiApp.ActiveUIDocument.Document.UseTransaction(() => uiApp.ActiveUIDocument.Document.Regenerate(), "Regenerate");
 
                     if(deleted)
-                        Autodesk.Revit.UI.TaskDialog.Show("Message", "Shared Parameters deleted!!!");
+                        TaskDialog.Show("Message", "Shared Parameters deleted!!!");
 
                 });
             }

@@ -3,9 +3,11 @@ using CWO_App.UI.Commands;
 using CWO_App.UI.Services;
 using CWO_App.UI.ViewModels;
 using CWO_App.UI.ViewModels.ApartmentValidation;
+using CWO_App.UI.ViewModels.KeynotesCreationViewModel;
 using CWO_App.UI.ViewModels.SharedParametersViewModels;
 using CWO_App.UI.Views;
 using CWO_App.UI.Views.ApartmentValidationViews;
+using CWO_App.UI.Views.KeynotesCreationViews;
 using CWO_App.UI.Views.SharedParameterViews;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -52,6 +54,10 @@ namespace CWO_App
             builder.Services.AddTransient<ApartmentValidation_ViewModel>();
             builder.Services.AddTransient<ApartmentValidation_Window>();
             builder.Services.AddTransient<ApartmentValidationShowWindow>();
+
+            builder.Services.AddTransient<KeynotesCreation_ViewModel>();
+            builder.Services.AddTransient<KeynotesCreation_Window>();
+            builder.Services.AddTransient<KeynotesCreationShowWindow>();
 
             _host = builder.Build();
             _host.Start();

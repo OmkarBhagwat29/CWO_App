@@ -1,0 +1,261 @@
+﻿<Window x:Class="CWO_App.UI.Views.KeynotesCreationViews.KeynotesCreation_Window"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:CWO_App.UI.Views.KeynotesCreationViews"
+        mc:Ignorable="d"
+         xmlns:viewModels ="clr-namespace:CWO_App.UI.ViewModels.KeynotesCreationViewModel"
+        d:DataContext="{d:DesignInstance viewModels:KeynotesCreation_ViewModel}"
+        Title="Keynotes Creation" Height="750" Width="1000"
+        ResizeMode="NoResize"
+        >
+
+    <Window.Resources>
+
+        <!-- Merge the resource dictionary containing the custom button style -->
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="../../Styles/ButtonStyles.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Window.Resources>
+
+    <Grid>
+
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition/>
+            <ColumnDefinition/>
+        </Grid.ColumnDefinitions>
+
+            <Grid Grid.Column="0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="0.1*"/>
+                <RowDefinition Height="0.1*"/>
+                <RowDefinition Height="0.1*"/>
+                <RowDefinition Height="10"/>
+                <RowDefinition Height="0.1*"/>
+                <RowDefinition/>
+                <RowDefinition Height="0.15*"/>
+            </Grid.RowDefinitions>
+
+            <StackPanel Grid.Row="0" Orientation="Horizontal"
+                        VerticalAlignment="Center"
+                        HorizontalAlignment="Center">
+
+                <Button 
+                    Margin="0,0,0,0"
+                    FontSize="14"
+                      HorizontalAlignment="Center"
+                      BorderThickness="0"
+                      Width="150" Height="30"
+                      Content="Select Uniclass Excel"
+                      Style="{StaticResource CustomButtonStyle}"
+                      Command="{Binding SelectUniclassExcelFileCommand}"/>
+
+                <Button Margin="10,0,0,0"
+                      FontSize="14"
+                      HorizontalAlignment="Center"
+                      BorderThickness="0"
+                      Width="170" Height="30"
+                      Content="Select Specification Excel"
+                      Style="{StaticResource CustomButtonStyle}"
+                      Command="{Binding SelectSpecificationExcelFileCommand}"/>
+            </StackPanel>
+
+
+            <StackPanel Grid.Row="1"
+                        Orientation="Horizontal"
+                        VerticalAlignment="Center">
+
+                <Button Margin="10,0,0,0"
+                      FontSize="14"
+                      HorizontalAlignment="Center"
+                      BorderThickness="0"
+                      Width="110" Height="30"
+                      Content="Keynote Folder"
+                      Style="{StaticResource CustomButtonStyle}"
+                      Command="{Binding SelectKeynoteFolderCommand}"/>
+
+                <Label Margin="20,0,0,0" 
+                    Content="Keynote File Name: " FontSize="14"/>
+                <TextBox
+                    FontSize="14"
+                    Width="200" Text="{Binding KeynoteFileName, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"/>
+            </StackPanel>
+
+            <StackPanel
+                    Grid.Row="2"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Orientation="Horizontal">
+
+                <Button 
+                    Margin="0,0,0,0"
+                    FontSize="14"
+                      HorizontalAlignment="Center"
+                      BorderThickness="0"
+                      Width="100" Height="30"
+                      Content="Create"
+                      Style="{StaticResource CustomButtonStyle}"
+                      Command="{Binding CreateKeynoteFileCommand}"/>
+
+                    <Button Margin="10,0,0,0"
+                      FontSize="14"
+                      HorizontalAlignment="Center"
+                      BorderThickness="0"
+                      Width="100" Height="30"
+                      Content="Load"
+                      Style="{StaticResource CustomButtonStyle}"
+                      Command="{Binding LoadKeynoteFileCommand}"/>
+                </StackPanel>
+
+            <StackPanel Grid.Row="4"
+                        Orientation="Horizontal"
+                        VerticalAlignment="Center">
+
+                <Label Content="Category: " FontSize="14"/>
+                <ComboBox 
+                 MinWidth="100"
+                 Width="auto"
+                 MinHeight="30"
+                 ItemsSource="{Binding CategoryNames}"
+                 SelectedItem="{Binding SelectedCategoryName, Mode=TwoWay}"
+                 ToolTip="selected category will be used to filter famly types">
+
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding}" HorizontalAlignment="Center" FontSize="14"/>
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+
+                <Label Content="Family: " Margin="15,0,0,0" FontSize="14"/>
+                <ComboBox 
+                 MinWidth="100"
+                 Width="auto"
+                 MinHeight="30"
+                 ItemsSource="{Binding FamilyNames}"
+                 SelectedItem="{Binding SelectedFamilyName, Mode=TwoWay}"
+                 ToolTip="selected Family will be used to filter famly types">
+
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding}" HorizontalAlignment="Center" FontSize="14"/>
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+
+            </StackPanel>
+
+
+                <DataGrid x:Name="DataGrdiFamily"
+                          Margin="5" Grid.Row="5"
+                          Background="White"
+                          ItemsSource="{Binding FamilyCollection.View}"
+                          AutoGenerateColumns="False"
+                         BorderBrush="LightGray"
+                         CanUserAddRows="False"
+                         BorderThickness="1"
+                         SelectedItem="{Binding SelectedFamily, Mode=TwoWay}"
+                            >
+
+                <DataGrid.Columns>
+                    
+                    <DataGridTextColumn Header="Family Type Name"
+                                        FontSize="14"
+                                        Binding="{Binding FamilyTypeName}"
+                                        Width="*"
+                                        ScrollViewer.CanContentScroll="True"
+                                        ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                        ScrollViewer.HorizontalScrollBarVisibility="Hidden"
+                                        IsReadOnly="True">
+
+                    </DataGridTextColumn>
+
+                    <DataGridTextColumn Header="Keynote Code"
+                                        FontSize="14"
+                                        Binding="{Binding KeynoteCode}"
+                                        Width="*"
+                                        ScrollViewer.CanContentScroll="True"
+                                        ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                        ScrollViewer.HorizontalScrollBarVisibility="Hidden"
+                                        IsReadOnly="True">
+
+                    </DataGridTextColumn>
+
+                </DataGrid.Columns>
+                    
+                </DataGrid>
+
+            <StackPanel Grid.Row="6" HorizontalAlignment="Center"
+                        Orientation="Horizontal">
+
+                <Button 
+                      HorizontalAlignment="Center"
+                      BorderThickness="0"
+                      Width="110" Height="30"
+                      FontSize="14"
+                      Content="Apply Keynotes"
+                      Style="{StaticResource CustomButtonStyle}"
+                      Command="{Binding ApplyKeynotesCommand}"/>
+
+
+                <Button Margin="20,0,0,0"
+                      HorizontalAlignment="Center"
+                      BorderThickness="0"
+                      Width="60" Height="30"
+                      Content="Clear"
+                        FontSize="14"
+                      Style="{StaticResource CustomButtonStyle}"
+                      Command="{Binding ClearKeynotesCommand}"/>
+
+            </StackPanel>
+
+            </Grid>
+
+
+
+        <Grid Grid.Column="1" Margin="5">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="0.05*"/>
+                <RowDefinition Height="0.08*"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <Label Content="Keynotes" Grid.Row="0"
+                   VerticalAlignment="Top"
+                   FontWeight="Bold"
+                   FontSize="16"/>
+
+            <!-- Search Box -->
+            <StackPanel Orientation="Horizontal" Grid.Row="1"
+                        VerticalAlignment="Center">
+                <Label Content="Search: " FontSize="14"/>
+                <TextBox x:Name="SearchBox" Width="300"
+             Text="{Binding SearchKeynoteText, UpdateSourceTrigger=PropertyChanged}"/>
+            </StackPanel>
+
+            <TreeView VerticalAlignment="Top"
+                    Grid.Row="3"
+                    x:Name="keynoteTrv" ItemsSource="{Binding FilteredKeynotes}"
+                      Height="620">
+                <TreeView.ItemTemplate>
+                    <HierarchicalDataTemplate ItemsSource="{Binding Keynotes}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock TextWrapping="Wrap" Text="{Binding Category}"/>
+                            <TextBlock TextWrapping="Wrap" Text="{Binding Description}"/>
+                        </StackPanel>
+                    </HierarchicalDataTemplate>
+                </TreeView.ItemTemplate>
+                <TreeView.ItemContainerStyle>
+                    <Style TargetType="TreeViewItem">
+                        <EventSetter Event="MouseDoubleClick" Handler="TreeViewItem_MouseDoubleClick"/>
+                    </Style>
+                </TreeView.ItemContainerStyle>
+            </TreeView>
+
+        </Grid>
+
+    </Grid>
+</Window>

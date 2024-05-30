@@ -51,7 +51,7 @@ namespace CWO_App.Commands
         {
             var assembly = Assembly.GetExecutingAssembly();
             panel.AddItem(new PushButtonData(MethodBase.GetCurrentMethod().DeclaringType?.Name,
-                $"Apartment\nValidation", assembly.Location, MethodBase.GetCurrentMethod().DeclaringType?.FullName)
+                $"Area & Width\nValidation", assembly.Location, MethodBase.GetCurrentMethod().DeclaringType?.FullName)
             {
                 ToolTip = "Apartment validation using Standards",
                 LargeImage = ImageUtils.LoadImage(assembly, "icon_32x32.png")

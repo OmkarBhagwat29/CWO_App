@@ -12,16 +12,19 @@ using System.Runtime.CompilerServices;
 
 
 
+
 namespace CWO_App.UI.Models.ApartmentValidation
 {
     public class CWO_Apartment : Apartment
     {
-
+        public static double BedroomAreaThreshold;
+        public static double ApartmentAreaThreshold; 
         public CWO_Apartment(ApartmentType _type,
         Area areaBoundary)
         {
             this.Type = _type;
             this.AreaBoundary = areaBoundary;
+
         }
 
         public override ApartmentType Type { get; }
@@ -30,7 +33,7 @@ namespace CWO_App.UI.Models.ApartmentValidation
         public static CWO_Apartment CreateApartment(Area areaBoundary, List<Room> rooms,
             ApartmentStandards standards, ILogger _logger)
         {
-            //var j = standards.RoomTypes["Bedroom"];
+
             var allBedrooms = rooms.Where(r =>
             r.LookupParameter(RoomValidationConstants.RoomName_ParamName).AsString()
             .Contains(RoomValidationConstants.Bedroom_Name,
@@ -45,7 +48,7 @@ namespace CWO_App.UI.Models.ApartmentValidation
 
             //this is a studio
             CWO_Apartment apt = null;
-            AreaWidthValidationData areaWidthValidationData = null;
+            ApartmentValidationData areaWidthValidationData = null;
             if (allBedrooms.Count == 0 && bathrooms.Count == 1)
             {
                 apt = new(ApartmentType.Studio, areaBoundary) { Name = ApartmentValidationConstants.Studio_Name, Occupancy = 2 };
@@ -53,34 +56,20 @@ namespace CWO_App.UI.Models.ApartmentValidation
             }
             else if (allBedrooms.Count() == 1)
             {
-                apt = new(ApartmentType.One_Bedroom, areaBoundary) { Name = ApartmentValidationConstants.OneBedRoom_Name, Occupancy = 3 }; ;
-                areaWidthValidationData = standards.GetStandardsForApartment(ApartmentType.One_Bedroom);
+
+                    apt = new(ApartmentType.One_Bedroom_1_Person, areaBoundary) {
+                        Name = ApartmentValidationConstants.OneBedRoomOnePerson_Name,
+                        Occupancy = 2 };
+                    areaWidthValidationData = standards.GetStandardsForApartment(ApartmentType.One_Bedroom_2_Person);
+
+
             }
             else if (allBedrooms.Count() == 2)
             {
-                double minArea_3Person = standards
-                     .ValidationInfo[ApartmentValidationConstants.TwoBedroomThreePerson_Name].MinimumFloorArea;
+                ////if any bedroom area is less that 10 then it is apartment for 3 person
+                ////if apartment area is less 68 then it is apartment for 3 person
 
-                var bedAreas_3Person = standards
-                    .ValidationInfo[ApartmentValidationConstants.TwoBedroomThreePerson_Name].MinimumAggregateBedroomAreas;
-
-                double minArea_4Person = standards
-                    .ValidationInfo[ApartmentValidationConstants.TwoBedroomFourPerson_Name].MinimumFloorArea;
-
-                var bedAreas_4Person = standards
-                   .ValidationInfo[ApartmentValidationConstants.TwoBedroomFourPerson_Name].MinimumAggregateBedroomAreas;
-
-                double achievedBoundaryArea = areaBoundary.Area.ToUnit(UnitTypeId.SquareMeters);
-
-                var combinedBedArea_3Person = bedAreas_3Person.Sum();
-                var combinedBedArea_4Person = bedAreas_4Person.Sum();
-
-                var bed_1Area = allBedrooms.First().Area.ToUnit(UnitTypeId.SquareMeters);
-                var bed_2Area = allBedrooms.Last().Area.ToUnit(UnitTypeId.SquareMeters);
-                var achievedBedArea = bed_1Area + bed_2Area;
-
-                if ((achievedBoundaryArea <= minArea_3Person || achievedBoundaryArea >= minArea_3Person)
-                    && achievedBoundaryArea <= minArea_4Person)
+                if (allBedrooms.Any(b => b.Area.ToUnit(UnitTypeId.SquareMeters) <= BedroomAreaThreshold))
                 {
                     apt = new(ApartmentType.Two_Bedroom_3_Person, areaBoundary)
                     {
@@ -102,8 +91,26 @@ namespace CWO_App.UI.Models.ApartmentValidation
             }
             else if (allBedrooms.Count() == 3)
             {
-                apt = new(ApartmentType.Three_Bedroom, areaBoundary) { Name = ApartmentValidationConstants.ThreeBedroom_Name };
-                areaWidthValidationData = standards.GetStandardsForApartment(ApartmentType.Three_Bedroom);
+                if (allBedrooms.Any(b => b.Area.ToUnit(UnitTypeId.SquareMeters) <= BedroomAreaThreshold))
+                {
+                    apt = new(ApartmentType.Three_Bedroom_5_Person, areaBoundary)
+                    {
+                        Name = ApartmentValidationConstants.ThreeBedroomFivePerson_Name,
+                        Occupancy = 5
+                    };
+
+                    areaWidthValidationData = standards.GetStandardsForApartment(ApartmentType.Three_Bedroom_5_Person);
+                }
+                else
+                {
+                    apt = new(ApartmentType.Three_Bedroom_5_Person, areaBoundary)
+                    {
+                        Name = ApartmentValidationConstants.ThreeBedroomSixPerson_Name,
+                        Occupancy = 6
+                    };
+
+                    areaWidthValidationData = standards.GetStandardsForApartment(ApartmentType.Three_Bedroom_6_Person);
+                }
             }
             else
             {
@@ -153,7 +160,7 @@ namespace CWO_App.UI.Models.ApartmentValidation
 
         private static void AddRoomsToApartment(CWO_Apartment apartment,
             List<Room> rooms, ApartmentStandards standards,
-            AreaWidthValidationData validationData)
+            ApartmentValidationData validationData)
         {
             List<Bedroom> bdRms = [];
             foreach (var rm in rooms)
@@ -202,7 +209,6 @@ namespace CWO_App.UI.Models.ApartmentValidation
                     var bedroom = new Bedroom(rm)
                     {
                         Name = RoomValidationConstants.Bedroom_Name,
-                        MinimumWidth = validationData.MinimumBedroomWidth
                     };
 
                     bdRms.Add(bedroom);
@@ -213,7 +219,6 @@ namespace CWO_App.UI.Models.ApartmentValidation
                     var bedroom = new Bedroom(rm);
 
                     bedroom.Name = RoomValidationConstants.Bedroom_1_Name;
-                    bedroom.MinimumWidth = validationData.MinimumBedroomWidth;
 
                     bdRms.Add(bedroom);
                 }
@@ -223,7 +228,6 @@ namespace CWO_App.UI.Models.ApartmentValidation
                     var bedroom = new Bedroom(rm)
                     {
                         Name = RoomValidationConstants.Bedroom_2_Name,
-                        MinimumWidth = validationData.MinimumBedroomWidth
                     };
 
                     bdRms.Add(bedroom);
@@ -234,7 +238,6 @@ namespace CWO_App.UI.Models.ApartmentValidation
                     var bedroom = new Bedroom(rm)
                     {
                         Name = RoomValidationConstants.Bedroom_3_Name,
-                        MinimumWidth = validationData.MinimumBedroomWidth
                     };
                     bdRms.Add(bedroom);
                 }
@@ -251,13 +254,30 @@ namespace CWO_App.UI.Models.ApartmentValidation
             }
 
             //order bedrooms by area
-            bdRms = bdRms.OrderBy(r => r.Room.Area).ToList();
+            bdRms = [.. bdRms.OrderBy(r => r.Room.Area)];
 
-            bdRms.ForEach(r => apartment.AddRoom(r));
+            //set minimum width of bedroom
+            for (int i = 0; i < bdRms.Count; i++)
+            {
+                //set bedroom type depending on its area
+                if (bdRms[i].Room.Area.ToUnit(UnitTypeId.SquareMeters) <= BedroomAreaThreshold)
+                {
+                    //single bed
+                    bdRms[i].SetBedRoomType(BedroomType.SingleBed);
+                }
+                else
+                {
+                    bdRms[i].SetBedRoomType(BedroomType.DoubleBed);
+                }
+
+                bdRms[i].MinimumWidth = validationData.MinimumBedroomWidths[i];
+
+                apartment.AddRoom(bdRms[i]);
+            }
         }
 
         private static void AddValidationData(CWO_Apartment apartment,
-            AreaWidthValidationData validationData)
+            ApartmentValidationData validationData)
         {
             //apartment area validation
             AreaValidation v = new(apartment.AreaBoundary.Area.ToUnit(UnitTypeId.SquareMeters),

@@ -15,47 +15,58 @@ namespace CWO_App.UI.Requirements
         public ParameterNames ParameterNames { get; set; }
         public Dictionary<string, string> ApartmentTypes { get; set; }
         public Dictionary<string, string> RoomTypes { get; set; }
-        public Dictionary<string, AreaWidthValidationData> ValidationInfo { get; set; }
-
+        public Dictionary<string, ApartmentValidationData> ApartmentValidationInfo { get; set; }
+        public BedroomValidationData BedroomInfo { get; set; }
+        public MiscellaneousValidationData AdditionalInfo { get; set; }
 
         public ApartmentType FindApartmentType(string apartmentTypeName)
         {
 
             if (apartmentTypeName == this.ApartmentTypes["Studio"])
                 return ApartmentType.Studio;
-            if (apartmentTypeName == this.ApartmentTypes["OneBedroom"])
-                return ApartmentType.One_Bedroom;
+            if (apartmentTypeName == this.ApartmentTypes["OneBedroomOnePerson"])
+                return ApartmentType.One_Bedroom_1_Person;
+            if (apartmentTypeName == this.ApartmentTypes["OneBedroomTwoPerson"])
+                return ApartmentType.One_Bedroom_2_Person;
             if (apartmentTypeName == this.ApartmentTypes["TwoBedroomThreePerson"])
                 return ApartmentType.Two_Bedroom_3_Person;
             if (apartmentTypeName == this.ApartmentTypes["TwoBedroomFourPerson"])
                 return ApartmentType.Two_Bedroom_4_Person;
-            if (apartmentTypeName == this.ApartmentTypes["ThreeBedroom"])
-                return ApartmentType.Three_Bedroom;
+            if (apartmentTypeName == this.ApartmentTypes["ThreeBedroomFivePerson"])
+                return ApartmentType.Three_Bedroom_5_Person;
+            if(apartmentTypeName == this.ApartmentTypes["ThreeBedroomSixPerson"])
+                return ApartmentType.Three_Bedroom_6_Person;
 
             return ApartmentType.None;
         }
 
-        public AreaWidthValidationData GetStandardsForApartment(string apartmentTypeName) => this.ValidationInfo[apartmentTypeName];
+        public ApartmentValidationData GetStandardsForApartment(string apartmentTypeName) => this.ApartmentValidationInfo[apartmentTypeName];
 
-        public AreaWidthValidationData GetStandardsForApartment(ApartmentType type)
+        public ApartmentValidationData GetStandardsForApartment(ApartmentType type)
         {
-            AreaWidthValidationData data = null;
+            ApartmentValidationData data = null;
             switch (type)
             {
                 case ApartmentType.Studio:
-                    data = this.ValidationInfo[ApartmentValidationConstants.Studio_Name];
+                    data = this.ApartmentValidationInfo[ApartmentValidationConstants.Studio_Name];
                     break;
-                case ApartmentType.One_Bedroom:
-                    data = this.ValidationInfo[ApartmentValidationConstants.OneBedRoom_Name];
+                case ApartmentType.One_Bedroom_1_Person:
+                    data = this.ApartmentValidationInfo[ApartmentValidationConstants.OneBedRoomOnePerson_Name];
+                    break;
+                case ApartmentType.One_Bedroom_2_Person:
+                    data = this.ApartmentValidationInfo[ApartmentValidationConstants.OneBedRoomTwoPerson_Name];
                     break;
                 case ApartmentType.Two_Bedroom_3_Person:
-                    data = this.ValidationInfo[ApartmentValidationConstants.TwoBedroomThreePerson_Name];
+                    data = this.ApartmentValidationInfo[ApartmentValidationConstants.TwoBedroomThreePerson_Name];
                     break;
                 case ApartmentType.Two_Bedroom_4_Person:
-                    data = this.ValidationInfo[ApartmentValidationConstants.TwoBedroomFourPerson_Name];
+                    data = this.ApartmentValidationInfo[ApartmentValidationConstants.TwoBedroomFourPerson_Name];
                     break;
-                case ApartmentType.Three_Bedroom:
-                    data = this.ValidationInfo[ApartmentValidationConstants.ThreeBedroom_Name];
+                case ApartmentType.Three_Bedroom_5_Person:
+                    data = this.ApartmentValidationInfo[ApartmentValidationConstants.ThreeBedroomFivePerson_Name];
+                    break;
+                case ApartmentType.Three_Bedroom_6_Person:
+                    data = this.ApartmentValidationInfo[ApartmentValidationConstants.ThreeBedroomSixPerson_Name];
                     break;
                 case ApartmentType.None:
                     break;
@@ -88,6 +99,21 @@ namespace CWO_App.UI.Requirements
                 return null;
             }
         }
+
+        public double GetBedroomAreaThreshold()
+        {
+            
+            double t = (this.BedroomInfo.SingleBedMinimumArea + this.BedroomInfo.DoubleBedMinimumArea) / 2;
+            return t;
+        }
+
+
+        public double GetTwoBedRoomApartmentAreaThreshold()
+        {
+            double t = (this.ApartmentValidationInfo[ApartmentValidationConstants.TwoBedroomThreePerson_Name].MinimumFloorArea +
+                this.ApartmentValidationInfo[ApartmentValidationConstants.TwoBedroomFourPerson_Name].MinimumFloorArea) / 2;
+            return t;
+        }
     }
 
     public class ParameterNames
@@ -97,23 +123,39 @@ namespace CWO_App.UI.Requirements
         public string RoomType { get; set; }
     }
 
-    public class AreaWidthValidationData
+    public class ApartmentValidationData
     {
         public double MinimumFloorArea { get; set; }
-        public int AdditionalPercentageAllowed { get; set; }
+       // public int AdditionalPercentageAllowed { get; set; }
         public double MinimumLivingDinningKitchenWidth { get; set; }
         public double MinimumLivingDinningKitchenArea { get; set; }
         public List<double> MinimumAggregateBedroomAreas { get; set; }
-        public double MinimumBedroomWidth { get; set; }
+        public List<double> MinimumBedroomWidths { get; set; }
         public double MinimumStorageArea { get; set; }
         public double MinimumBalconyArea { get; set; }
         public double MinimumBalconyWidth { get; set; }
         public double EnclosedKitchenArea { get; set; }
 
-        public AreaWidthValidationData()
+        public ApartmentValidationData()
         {
-            AdditionalPercentageAllowed = 10;
+            //AdditionalPercentageAllowed = 10;
             MinimumAggregateBedroomAreas = [];
         }
+    }
+
+    public class BedroomValidationData
+    {
+        public double SingleBedMinimumArea { get; set; }
+        public double SingleBedMinimumWidth { get; set; } 
+
+        public double DoubleBedMinimumArea { get; set; }
+
+        public double DoubleBedMinimumWidth { get; set; }
+
+    }
+
+    public class MiscellaneousValidationData
+    {
+        public double AdditionalApartmentAreaPercentage { get; set; }
     }
 }

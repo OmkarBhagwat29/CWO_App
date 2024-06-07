@@ -35,23 +35,6 @@ namespace CWO_App.Commands
 
                 Host.GetService<KeynotesCreationShowWindow>().Execute();
 
-                //string uniclassFile = @"C:\Users\Om\OneDrive - CW O'Brien Architects Limited\Projects\CWO_App\Keynotes\Uniclass2015_Combined.xlsx";
-                //string specFile = @"C:\Users\Om\OneDrive - CW O'Brien Architects Limited\Projects\CWO_App\Keynotes\Architectural Specification (to convert).xlsx";
-                //string keynoteFolder = @"C:\Users\Om\OneDrive - CW O'Brien Architects Limited\Projects\CWO_App\Keynotes\Testing";
-                //string keynoteFileName = "Test_Me";
-
-                //var keynoteModel = new KeynotesModel(uniclassFile, specFile, keynoteFolder, keynoteFileName);
-
-                //var lines = keynoteModel.CreateKeynoteFile();
-
-
-                //if (!File.Exists(keynoteModel.GetKeynoteFilePath()))
-                //    return;
-
-                //doc.UseTransaction(() => {
-
-                //    doc.LoadKeynoteFile(keynoteModel.GetKeynoteFilePath());
-                //});
             }
 			catch
 			{
@@ -65,8 +48,10 @@ namespace CWO_App.Commands
             panel.AddItem(new PushButtonData(MethodBase.GetCurrentMethod().DeclaringType?.Name,
                 $"Keynotes\nCreation", assembly.Location, MethodBase.GetCurrentMethod().DeclaringType?.FullName)
             {
-                ToolTip = "Create Keynote file from Uniclass and specifications.\nEnable user to set keynote parameter to multiple families",
-                LargeImage = ImageUtils.LoadImage(assembly, "icon_32x32.png")
+                ToolTip = $"Create Keynote file from Uniclass and specifications." +
+                $"\nEnable user to set keynote parameter to multiple families",
+                LargeImage = ImageUtils.LoadImage(assembly, "Keynote_32x32.png")
+                
             });
 
         }

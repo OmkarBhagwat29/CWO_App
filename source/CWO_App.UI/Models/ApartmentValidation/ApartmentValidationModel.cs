@@ -27,6 +27,9 @@ namespace CWO_App.UI.Models.ApartmentValidation
             UiApp = uiApp;
             Standards = _standards;
             _logger = logger;
+
+            CWO_Apartment.ApartmentAreaThreshold = Standards.GetTwoBedRoomApartmentAreaThreshold();
+            CWO_Apartment.BedroomAreaThreshold = Standards.GetBedroomAreaThreshold();
         }
 
         DefinitionFile _definitionFile;
@@ -555,6 +558,14 @@ namespace CWO_App.UI.Models.ApartmentValidation
 
         public void SetApartmentParameters()
         {
+            var doc = UiApp.ActiveUIDocument.Document;
+            var lengthUnitType = SpecTypeId.Length;
+            var areaUnitType = SpecTypeId.Area;
+            var currentLengthDisplayUnits = doc.GetUnits().GetFormatOptions(lengthUnitType).GetUnitTypeId();
+            var currentAreaDisplayUnits = doc.GetUnits().GetFormatOptions(areaUnitType).GetUnitTypeId();
+
+            //bool convertArea = currentAreaDisplayUnits != UnitTypeId.SquareMeters;
+
             foreach (var apt in this.Apartments)
             {
                 #region Apartment Parameteres
@@ -566,13 +577,14 @@ namespace CWO_App.UI.Models.ApartmentValidation
 
                     if (aV != null)
                     {
-                       double sqFt = UnitUtils.ConvertToInternalUnits(aV.RequiredArea, UnitTypeId.SquareMeters);
-                       bool success = p.Set(sqFt);
+
+                        double sqFt = aV.RequiredArea.FromUnit(UnitTypeId.SquareMeters); //UnitUtils.Convert(aV.RequiredArea, currentAreaDisplayUnits, UnitTypeId.SquareMeters);
+                        bool success = p.Set(sqFt);
                     }
 
                     //This parameter to store whether or not the apartment area is above 10% of the minimum overall floor area required.
                     p = apt.AreaBoundary.LookupParameter(ApartmentValidationConstants.CWO_APARTMENTS_ABOVE_TEN_PERC);
-                    p?.Set(aV.IsGreaterThan(10.0));
+                    p?.Set(aV.IsGreaterThan(Standards.AdditionalInfo.AdditionalApartmentAreaPercentage));
                 }
 
                 //This parameter to store the number of bedrooms in the apartment.
@@ -595,7 +607,7 @@ namespace CWO_App.UI.Models.ApartmentValidation
                 p = apt.AreaBoundary.LookupParameter(ApartmentValidationConstants.CWO_APARTMENTS_PROP_BED_AREA);
                 if (p != null && aG != null)
                 {
-                    double sqFt = UnitUtils.ConvertToInternalUnits(Math.Round(aG.AchievedAreas.Sum(), 2), UnitTypeId.SquareMeters);
+                    double sqFt = aG.AchievedAreas.Sum().FromUnit(UnitTypeId.SquareMeters);//UnitUtils.Convert(Math.Round(aG.AchievedAreas.Sum(), 2), currentAreaDisplayUnits, UnitTypeId.SquareMeters);
                         p.Set(sqFt);
                 }
 
@@ -603,7 +615,7 @@ namespace CWO_App.UI.Models.ApartmentValidation
                 p = apt.AreaBoundary.LookupParameter(ApartmentValidationConstants.CWO_APARTMENTS_MIN_BED_AREA);
                 if (p != null && aG != null)
                 {
-                    double sqFt = UnitUtils.ConvertToInternalUnits(Math.Round(aG.RequiredAreas.Sum(), 2), UnitTypeId.SquareMeters);
+                    double sqFt = aG.RequiredAreas.Sum().FromUnit(UnitTypeId.SquareMeters); //UnitUtils.Convert(Math.Round(aG.RequiredAreas.Sum(), 2), UnitTypeId.SquareMeters, currentAreaDisplayUnits);
                     p.Set(sqFt);
                 }
 
@@ -614,7 +626,7 @@ namespace CWO_App.UI.Models.ApartmentValidation
                 p = apt.AreaBoundary.LookupParameter(ApartmentValidationConstants.CWO_APARTMENTS_PROP_STORE_AREA);
                 if (p != null && aG != null)
                 {
-                    double sqFt = UnitUtils.ConvertToInternalUnits(Math.Round(cV.CombinedArea, 2), UnitTypeId.SquareMeters);
+                    double sqFt = cV.CombinedArea.FromUnit(UnitTypeId.SquareMeters);//UnitUtils.Convert(Math.Round(cV.CombinedArea, 2), UnitTypeId.SquareMeters, currentAreaDisplayUnits);
                     p.Set(sqFt);
                 }
 
@@ -622,7 +634,7 @@ namespace CWO_App.UI.Models.ApartmentValidation
                 p = apt.AreaBoundary.LookupParameter(ApartmentValidationConstants.CWO_APARTMENTS_MIN_STORE_AREA);
                 if (p != null && aG != null)
                 {
-                    double sqFt = UnitUtils.ConvertToInternalUnits(Math.Round(cV.RequiredArea, 2), UnitTypeId.SquareMeters);
+                    double sqFt = cV.RequiredArea.FromUnit(UnitTypeId.SquareMeters); //UnitUtils.Convert(Math.Round(cV.RequiredArea, 2), UnitTypeId.SquareMeters, currentAreaDisplayUnits);
                     p.Set(sqFt);
                 }
 
@@ -653,14 +665,13 @@ namespace CWO_App.UI.Models.ApartmentValidation
                         {
                             var dV = validation as DimensionValidation;
 
-                            double fT = dV.RequiredMinWidth.FromMillimeters();
+                            double fT = dV.RequiredMinWidth.FromUnit(UnitTypeId.Meters);//UnitUtils.Convert(dV.RequiredMinWidth, UnitTypeId.Meters, currentLengthDisplayUnits); //dV.RequiredMinWidth.FromMillimeters();
                             p.Set(fT);
-
 
                             //This parameter to store the proposed width of the room.
                             p = rm.Room.LookupParameter(RoomValidationConstants.CWO_ROOMS_PROP_WIDTH);
 
-                            fT = dV.AchievedMinWidth.FromMillimeters();
+                            fT = dV.AchievedMinWidth.FromUnit(UnitTypeId.Meters); //UnitUtils.Convert(dV.AchievedMinWidth, UnitTypeId.Meters, currentLengthDisplayUnits); //dV.AchievedMinWidth.FromMillimeters();
 
                             p?.Set(fT);
                         }
@@ -677,9 +688,10 @@ namespace CWO_App.UI.Models.ApartmentValidation
                         {
                             var areaValidation = validation as AreaValidation;
 
-                            p.Set(UnitUtils.ConvertToInternalUnits(areaValidation.RequiredArea,UnitTypeId.SquareMeters));
-                        }
+                            var sF = areaValidation.RequiredArea.FromUnit(UnitTypeId.SquareMeters);
 
+                            p.Set(sF);
+                        }
 
                     }
                 }
@@ -700,12 +712,11 @@ namespace CWO_App.UI.Models.ApartmentValidation
                         p = bed.Room.LookupParameter(RoomValidationConstants.CWO_ROOMS_MIN_AREA);
                         if (p != null)
                         {
-                            p.Set(UnitUtils.ConvertToInternalUnits(aggregateValidation.RequiredAreas[i],UnitTypeId.SquareMeters)); 
+                            var sF = aggregateValidation.RequiredAreas[i].FromUnit(UnitTypeId.SquareMeters);
+                            p.Set(sF); 
                         }
                     }
                 }
-
-
 
                 #endregion
             }

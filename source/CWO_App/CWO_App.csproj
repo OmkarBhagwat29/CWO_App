@@ -36,6 +36,14 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+	  <None Remove="Resources\Icons\ACC_Hub_32x32.png" />
+	  <None Remove="Resources\Icons\Keynote_32x32.png" />
+	  <None Remove="Resources\Icons\SharedParameters_32x32.png" />
+	  <None Remove="Resources\Icons\SP_16x16.png" />
+	  <None Remove="Resources\Icons\Validation_32x32.png" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<PackageReference Include="Nice3point.Revit.Build.Tasks" Version="1.*" />
 		<PackageReference Include="Nice3point.Revit.Toolkit" Version="$(RevitVersion).*-*" />
 		<PackageReference Include="Nice3point.Revit.Extensions" Version="$(RevitVersion).*-*" />
@@ -52,7 +60,10 @@
 	<ItemGroup>
 		<EmbeddedResource Include="Resources\Icons\ACC_Hub_32x32.png" />
 		<EmbeddedResource Include="Resources\Icons\icon_32x32.png" />
+		<EmbeddedResource Include="Resources\Icons\Keynote_32x32.png" />
 		<EmbeddedResource Include="Resources\Icons\SharedParameters_32x32.png" />
+		<EmbeddedResource Include="Resources\Icons\SP_16x16.png" />
+		<EmbeddedResource Include="Resources\Icons\Validation_32x32.png" />
 	</ItemGroup>
 
 	<ItemGroup>

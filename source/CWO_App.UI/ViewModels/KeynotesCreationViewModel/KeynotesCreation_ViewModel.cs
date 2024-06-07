@@ -16,6 +16,8 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Data;
+using RevitCore.Utils;
+
 
 
 #if NET8_0_OR_GREATER
@@ -36,6 +38,7 @@ namespace CWO_App.UI.ViewModels.KeynotesCreationViewModel
         private readonly AsyncEventHandler<ElementId> _asyncIdExternalHandler = new();
 
         private KeynotesCreationModel _model;
+        bool _fileCreated = false;
 
         [ObservableProperty] private FamilyInfo_ViewModel _selectedFamily;
 
@@ -246,7 +249,7 @@ namespace CWO_App.UI.ViewModels.KeynotesCreationViewModel
             System.Windows.Forms.OpenFileDialog openFileDialog = new();
 
             openFileDialog.Filter = "Excel Files|*.xls;*.xlsx;*.xlsm";
-            openFileDialog.Title = "Select Uniclass Excel File";
+            openFileDialog.Title = "Select Specification Excel File";
 
             if (openFileDialog.ShowDialog() == DialogResult.OK)
             {
@@ -303,42 +306,98 @@ namespace CWO_App.UI.ViewModels.KeynotesCreationViewModel
                 if (File.Exists(file))
                 {
                     TaskDialog.Show("Message", $"Keynote File Created => {_model.GetKeynoteFilePath()}");
+                    _fileCreated = true;
                 }
                 else
                 {
                     TaskDialog.Show("Message", $"Unable to Create Keynote File, Check the inputs");
+                    _fileCreated = false;
                 }
 
             }
             catch (Exception)
             {
                 TaskDialog.Show("Message", $"Unable to Create Keynote File, Check the inputs");
+                _fileCreated = false;
             }
         }
 
         [RelayCommand]
-        public void LoadKeynoteFile()
+        public async Task LoadKeynoteFile()
         {
 
             try
             {
-                if (!File.Exists(_model.GetKeynoteFilePath()))
-                    return;
-
-                LoadTreeNodes(_model.KeynoteLines);
-                _externalHandler.Raise(uiApp =>
+                //Get keynote file from revit doc
+#pragma warning disable CA1416 // Validate platform compatibility
+                await _asyncExternalHandler.RaiseAsync(uiApp =>
                 {
                     var doc = uiApp.ActiveUIDocument.Document;
 
-                    doc.UseTransaction(() => doc.LoadKeynoteFile(_model.GetKeynoteFilePath()), "Keynote file loaded");
+                    if (!_fileCreated)
+                    {
+                        var extDic = KeynoteTable.GetKeynoteTable(doc)
+                        .GetExternalResourceReferences();
+
+                        var keynoteFilePath = "";
+
+                        foreach (var ext in extDic)
+                        {
+                            string path = ext.Value.InSessionPath;
+
+                            if (File.Exists(path))
+                            {
+                                keynoteFilePath = ext.Value.InSessionPath;
+                                break;
+                            }
+                            else
+                            {
+                                //check if it is a cloud path
+                                string splitString = "Autodesk Docs://";
+                                if (path.Contains(splitString))
+                                {
+                                    var splitFilePath = path.Split(new string[] {splitString},StringSplitOptions.None)[1];
+                                    splitFilePath = splitFilePath.Replace('/', '\\');
+                                    string folder = LocalDirectoryManager.UserProfileFolder;
+
+                                    folder = Path.Combine(folder, "DC\\ACCDocs");
+
+                                    string filePath = Path.Combine(folder, splitFilePath);
+
+                                    if (File.Exists(filePath))
+                                    {
+                                        keynoteFilePath = filePath;
+                                    }
+                                }
+                            }
+                        }
+
+                        if (File.Exists(keynoteFilePath))
+                        {
+                            //set model data
+                            _model.Set_KeynoteFileFolderPath(Path.GetDirectoryName(keynoteFilePath));
+                            _model.Set_KeynoteFileName(Path.GetFileNameWithoutExtension(keynoteFilePath));
+
+                            _model.Set_KeynoteLines([.. File.ReadAllLines(keynoteFilePath)]);
+                        }
+                    }
+
+
+                    if (!File.Exists(_model.GetKeynoteFilePath()))
+                        return;
+
+                    LoadTreeNodes(_model.KeynoteLines);
+
+                   doc.UseTransaction(() => doc.LoadKeynoteFile(_model.GetKeynoteFilePath()), "Keynote file loaded");
 
                     this.SetFamilyTypeData(doc);
                 });
+#pragma warning restore CA1416 // Validate platform compatibility
 
             }
             catch (Exception)
             {
-
+                TaskDialog.Show("Message", "Keynote File Not found");
             }
 
         }

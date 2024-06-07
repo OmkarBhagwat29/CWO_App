@@ -134,7 +134,7 @@ namespace CWO_App.UI.Models.Keynotes
                 return $"{code}\t{description}\t{subGroup}";
         }
 
-        private List<string> GetKeynoteFileTexts(XLWorkbook uniClassWorkbook, XLWorkbook specWorkbook)
+        private List<string> CreateKeynoteFileTexts(XLWorkbook uniClassWorkbook, XLWorkbook specWorkbook)
         {
 
             var uniClassCodeData = GetUniClassCodeAndDescription(uniClassWorkbook).ToList();
@@ -214,7 +214,7 @@ namespace CWO_App.UI.Models.Keynotes
             var specWorkbook = GetSpecificationWorkbook();
             if (specWorkbook == null) throw new ArgumentNullException($"Unable to open Specification workbook: {specWorkbook}");
 
-            this.KeynoteLines = GetKeynoteFileTexts(uniClassWorkbook,specWorkbook);
+            this.KeynoteLines = CreateKeynoteFileTexts(uniClassWorkbook,specWorkbook);
 
             string fileName = Path.Combine(this.keynoteFileFolder, this.keynoteFileName + ".txt");
             File.WriteAllLines(fileName, this.KeynoteLines);
@@ -222,5 +222,9 @@ namespace CWO_App.UI.Models.Keynotes
             return fileName;
         }
 
+        public void Set_KeynoteLines(List<string> keynoteFileTexts)
+        {
+            this.KeynoteLines = keynoteFileTexts;
+        }
     }
 }

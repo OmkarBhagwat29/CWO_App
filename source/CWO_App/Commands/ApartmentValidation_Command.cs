@@ -54,7 +54,7 @@ namespace CWO_App.Commands
                 $"Area & Width\nValidation", assembly.Location, MethodBase.GetCurrentMethod().DeclaringType?.FullName)
             {
                 ToolTip = "Apartment validation using Standards",
-                LargeImage = ImageUtils.LoadImage(assembly, "icon_32x32.png")
+                LargeImage = ImageUtils.LoadImage(assembly, "Validation_32x32.png")
             });
 
         }

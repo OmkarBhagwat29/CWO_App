@@ -80,8 +80,9 @@ namespace CWO_App.UI.Requirements
             string assemblyDir = LocalDirectoryManager.AssemblyDirectory;
             string settingsPath = Path.Combine(assemblyDir, FileConstants.ApartmentStandardsJsonFile);
 
+            string userFolder = LocalDirectoryManager.UserProfileFolder;
 #if DEBUG
-            settingsPath = @"C:\Users\Om\source\repos\CWOArchitects\CWO_App\source\CWO_App.UI\Resources\Standards\ApartmentStandards.json";
+            settingsPath = @$"{userFolder}\source\repos\CWOArchitects\CWO_App\source\CWO_App.UI\Resources\Standards\ApartmentStandards.json";
 #endif
 
             string settingsStr = File.ReadAllText(settingsPath);

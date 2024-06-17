@@ -35,6 +35,7 @@
                 <RowDefinition Height="0.1*"/>
                 <RowDefinition Height="10"/>
                 <RowDefinition Height="0.1*"/>
+
                 <RowDefinition/>
                 <RowDefinition Height="0.15*"/>
             </Grid.RowDefinitions>
@@ -130,26 +131,18 @@
                     </ComboBox.ItemTemplate>
                 </ComboBox>
 
-                <Label Content="Family: " Margin="15,0,0,0" FontSize="14"/>
-                <ComboBox 
-                 MinWidth="100"
-                 Width="auto"
-                 MinHeight="30"
-                 ItemsSource="{Binding FamilyNames}"
-                 SelectedItem="{Binding SelectedFamilyName, Mode=TwoWay}"
-                 ToolTip="selected Family will be used to filter famly types">
+                <Label Margin="20,0,0,0" 
+                 Content="Family Search: " FontSize="14"/>
 
-                    <ComboBox.ItemTemplate>
-                        <DataTemplate>
-                            <TextBlock Text="{Binding}" HorizontalAlignment="Center" FontSize="14"/>
-                        </DataTemplate>
-                    </ComboBox.ItemTemplate>
-                </ComboBox>
+                <TextBox
+                    FontSize="14"
+                    Width="150" Text="{Binding SearchFamilyText,
+                    UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"/>
 
             </StackPanel>
 
 
-                <DataGrid x:Name="DataGrdiFamily"
+             <DataGrid x:Name="DataGrdiFamily"
                           Margin="5" Grid.Row="5"
                           Background="White"
                           ItemsSource="{Binding FamilyCollection.View}"
@@ -161,8 +154,19 @@
                             >
 
                 <DataGrid.Columns>
-                    
-                    <DataGridTextColumn Header="Family Type Name"
+
+                    <DataGridTextColumn Header="Family Name"
+                                        FontSize="14"
+                                        Binding="{Binding FamilyName}"
+                                        Width="*"
+                                        ScrollViewer.CanContentScroll="True"
+                                        ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                        ScrollViewer.HorizontalScrollBarVisibility="Hidden"
+                                        IsReadOnly="True">
+
+                    </DataGridTextColumn>
+
+                    <DataGridTextColumn Header="Type"
                                         FontSize="14"
                                         Binding="{Binding FamilyTypeName}"
                                         Width="*"
@@ -188,7 +192,7 @@
                     
                 </DataGrid>
 
-            <StackPanel Grid.Row="6" HorizontalAlignment="Center"
+            <StackPanel Grid.Row="7" HorizontalAlignment="Center"
                         Orientation="Horizontal">
 
                 <Button 
@@ -240,6 +244,11 @@
                     Grid.Row="3"
                     x:Name="keynoteTrv" ItemsSource="{Binding FilteredKeynotes}"
                       Height="620">
+                <TreeView.Resources>
+                    <ContextMenu x:Key="TreeViewItemContextMenu">
+                        <MenuItem Header="Copy" Click="CopyMenuItem_Click"/>
+                    </ContextMenu>
+                </TreeView.Resources>
                 <TreeView.ItemTemplate>
                     <HierarchicalDataTemplate ItemsSource="{Binding Keynotes}">
                         <StackPanel Orientation="Horizontal">
@@ -251,6 +260,7 @@
                 <TreeView.ItemContainerStyle>
                     <Style TargetType="TreeViewItem">
                         <EventSetter Event="MouseDoubleClick" Handler="TreeViewItem_MouseDoubleClick"/>
+                        <Setter Property="ContextMenu" Value="{StaticResource TreeViewItemContextMenu}"/>
                     </Style>
                 </TreeView.ItemContainerStyle>
             </TreeView>

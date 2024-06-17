@@ -1,10 +1,7 @@
-﻿using Autodesk.Revit.DB;
-using Autodesk.Revit.DB.Architecture;
-using Autodesk.Revit.DB.Events;
+﻿
 using Autodesk.Revit.UI;
 using CWO_App.UI.Constants;
 using CWO_App.UI.Requirements;
-using DocumentFormat.OpenXml.Bibliography;
 using Microsoft.Extensions.Logging;
 using RevitCore.Extensions;
 using RevitCore.Extensions.DefinitionExt;
@@ -45,6 +42,7 @@ namespace CWO_App.UI.Models.ApartmentValidation
         {
             this._definitionFile = defFile;
         }
+
         public void SetAreaRoomAssociation()
         {
             _associations = AreaRoomAssociation
@@ -57,6 +55,7 @@ namespace CWO_App.UI.Models.ApartmentValidation
                 return true;
             });
         }
+
 
         /// <summary>
         /// This method also set parameter value
@@ -334,64 +333,107 @@ namespace CWO_App.UI.Models.ApartmentValidation
            this.Validate(true);
         }
 
-        public void CreateAreaValidationSchedule(ElementId areaSchemaId)
+        public bool CheckSharedParametersExists()
         {
+            //check apartment params
+            
+            if (!this._definitionFile.GroupExists(ApartmentValidationConstants.SharedParameterGroupName))
+            {
+                return false;
+            }
 
-            var parameters = new List<ElementId>();
+            if (!this._definitionFile.GroupExists(RoomValidationConstants.SharedParameterGroupName))
+            {
+                return false;
+            }
 
-            var a = this.Apartments.FirstOrDefault().AreaBoundary;
+            var aptGroup = this._definitionFile.Groups.FirstOrDefault(g => g.Name == ApartmentValidationConstants.SharedParameterGroupName);
 
-            var dwellingTypeParam = a.LookupParameter(Standards.ParameterNames.ApartmentType);
-            parameters.Add(dwellingTypeParam.Id);
-            parameters.Add(a.LookupParameter(ApartmentValidationConstants.CWO_APARTMENTS_NUMBER).Id);
-            parameters.Add(a.LookupParameter("Area").Id);
-            parameters.Add(a.LookupParameter(ApartmentValidationConstants.CWO_APARTMENTS_MIN_AREA).Id);
-            parameters.Add(a.LookupParameter(ApartmentValidationConstants.AreaWith10Percentage_ParamName).Id);
-            parameters.Add(a.LookupParameter(ApartmentValidationConstants.CWO_APARTMENTS_BEDS).Id);
-            parameters.Add(a.LookupParameter(ApartmentValidationConstants.CWO_APARTMENTS_PERSON).Id);
-            parameters.Add(a.LookupParameter(ApartmentValidationConstants.CWO_APARTMENTS_PROP_BED_AREA).Id);
-            parameters.Add(a.LookupParameter(ApartmentValidationConstants.CWO_APARTMENTS_MIN_BED_AREA).Id);
-            parameters.Add(a.LookupParameter(ApartmentValidationConstants.CWO_APARTMENTS_PROP_STORE_AREA).Id);
-            parameters.Add(a.LookupParameter(ApartmentValidationConstants.CWO_APARTMENTS_MIN_STORE_AREA).Id);
-            parameters.Add(a.LookupParameter(ApartmentValidationConstants.CWO_APARTMENTS_ABOVE_TEN_PERC).Id);
+            foreach (var pName in ApartmentValidationConstants.RequiredApartmentValidationParamNames)
+            {
+                var p = aptGroup.GetDefinitionInGroup(pName);
+                if (p == null)
+                {
+                    return false;
+                }
+            }
 
+            var roomGroup = this._definitionFile.Groups.FirstOrDefault(g => g.Name == RoomValidationConstants.SharedParameterGroupName);
+            foreach (var pName in RoomValidationConstants.RequiredRoomValidationParamNames)
+            {
+                var p = roomGroup.GetDefinitionInGroup(pName);
+                if (p == null)
+                {
+                    return false;
+                }
+            }
 
-            UiApp.ActiveUIDocument.Document
-                .UseTransaction(() =>
+            return true;
+        }
+
+        public void CreateProjectParameters()
+        {
+            var group = this._definitionFile.Groups.First(g => g.Name == ApartmentValidationConstants.SharedParameterGroupName);
+
+            List<ExternalDefinition> extDefAreas = [];
+            foreach (var pName in ApartmentValidationConstants.RequiredApartmentValidationParamNames)
+            {
+               var p = group.GetDefinitionInGroup(pName);
+
+                if (p is ExternalDefinition extDef)
+                {
+                    extDefAreas.Add(extDef);
+                }
+            }
+
+            extDefAreas.
+            TryAddToDocument(UiApp.ActiveUIDocument.Document,
+            new List<BuiltInCategory>() { BuiltInCategory.OST_Areas },
+            BindingKind.Instance, GroupTypeId.IdentityData);
+
+            group = this._definitionFile.Groups.First(g => g.Name == RoomValidationConstants.SharedParameterGroupName);
+
+            List<ExternalDefinition> extDefRooms = [];
+            foreach (var pName in RoomValidationConstants.RequiredRoomValidationParamNames)
+            {
+                var p = group.GetDefinitionInGroup(pName);
+
+                if (p is ExternalDefinition extDef)
+                {
+                    extDefRooms.Add(extDef);
+                }
+            }
+
+            extDefRooms.
+            TryAddToDocument(UiApp.ActiveUIDocument.Document,
+            new List<BuiltInCategory>() { BuiltInCategory.OST_Rooms },
+            BindingKind.Instance, GroupTypeId.IdentityData);
+
+            //return;
+            //set it to group instance
+            BindingMap bM = UiApp.ActiveUIDocument.Document.ParameterBindings;
+            DefinitionBindingMapIterator it = bM.ForwardIterator();
+            it.Reset();
+            while (it.MoveNext())
+            {
+                Definition definition = it.Key;
+
+                if (RoomValidationConstants.RequiredRoomValidationParamNames.Contains(definition.Name) ||
+                    ApartmentValidationConstants.RequiredApartmentValidationParamNames.Contains(definition.Name))
                 {
 
-                    UiApp.ActiveUIDocument.Document.CreateScheduleByCategory(BuiltInCategory.OST_Areas, parameters,
-                        "Area Validation", areaSchemaId);
+                    // TODO:  Verify the GUID matches the one for the shared parameter we just added
 
-                }, "Schedule Created");
+                    InternalDefinition internalDef = definition as InternalDefinition;
 
-        }
-
-        public void CreateMinWidthValidationSchedule()
-        {
-            var parameters = new List<ElementId>();
-
-            var room = this.Apartments.FirstOrDefault().Rooms.FirstOrDefault().Room;
-
-            parameters.Add(room.LookupParameter(RoomValidationConstants.RoomName_ParamName).Id);
-            parameters.Add(room.LookupParameter(RoomValidationConstants.AchievedArea_ParamName).Id);
-            parameters.Add(room.LookupParameter(RoomValidationConstants.CWO_ROOMS_MIN_AREA).Id);
-           // parameters.Add(room.LookupParameter(RoomValidationConstants.AreaDifference_ParamName).Id);
-            parameters.Add(room.LookupParameter(RoomValidationConstants.CWO_ROOMS_PROP_WIDTH).Id);
-            parameters.Add(room.LookupParameter(RoomValidationConstants.CWO_ROOMS_MIN_WIDTH).Id);
-            //parameters.Add(room.LookupParameter(RoomValidationConstants.WidthAccuracy_ParamName).Id);
-
-            UiApp.ActiveUIDocument.Document
-                                    .UseTransaction(() =>
-                                    {
-
-                                        UiApp.ActiveUIDocument
-                                        .Document.CreateScheduleByCategory(BuiltInCategory.OST_Rooms, parameters, "Room Validation");
-
-                                    }, "Schedule Created");
+                    if (internalDef != null)
+                    {
+                        internalDef.SetAllowVaryBetweenGroups(UiApp.ActiveUIDocument.Document, true);
+                    }
+                }
+            }
 
         }
-
 
         public static void CheckRequiredParametersExists(Element areaElement, Element roomElement,
             out List<string> messages)
@@ -413,6 +455,7 @@ namespace CWO_App.UI.Models.ApartmentValidation
                 {
                     messages.Add($"Shared Parameter *{pName}* not found for Room.");
                 }
+
             }
 
             if (messages.Count > 0)
@@ -421,153 +464,18 @@ namespace CWO_App.UI.Models.ApartmentValidation
             }
         }
 
-        public void CreateAndAssignRequiredParameters(Element areaElement, Element roomElement)
-        {
-
-            var defGroup = this._definitionFile.CreateOrGetGroup(ApartmentValidationConstants.SharedParameterGroupName);
-
-            //all apartment level params => category : OST_Areas
-            var areaExternalDefs = new List<ExternalDefinition>();
-
-            if (areaElement.LookupParameter(ApartmentValidationConstants.CWO_APARTMENTS_TYPE) == null)
-            {
-                var aptTypeDef = defGroup.GetOrCreateDefinitionInGroup(ApartmentValidationConstants.CWO_APARTMENTS_TYPE,
-                    SpecTypeId.String.Text);
-
-                areaExternalDefs.Add(aptTypeDef);
-            }
-
-            if (areaElement.LookupParameter(ApartmentValidationConstants.CWO_APARTMENTS_NUMBER) == null)
-            {
-                var aptNameDef = defGroup.GetOrCreateDefinitionInGroup(ApartmentValidationConstants.CWO_APARTMENTS_NUMBER,
-                    SpecTypeId.String.Text);
-
-                areaExternalDefs.Add(aptNameDef);
-            }
-
-            if (areaElement.LookupParameter(ApartmentValidationConstants.CWO_APARTMENTS_MIN_AREA) == null)
-            {
-                var aptAreaReqDef = defGroup.GetOrCreateDefinitionInGroup(ApartmentValidationConstants.CWO_APARTMENTS_MIN_AREA,
-                    SpecTypeId.Number);
-                areaExternalDefs.Add(aptAreaReqDef);
-            }
-
-            if (areaElement.LookupParameter(ApartmentValidationConstants.AreaWith10Percentage_ParamName) == null)
-            {
-                var paramDef = defGroup.GetOrCreateDefinitionInGroup(ApartmentValidationConstants.AreaWith10Percentage_ParamName,
-                    SpecTypeId.Number);
-                areaExternalDefs.Add(paramDef);
-            }
-
-            if (areaElement.LookupParameter(ApartmentValidationConstants.CWO_APARTMENTS_BEDS) == null)
-            {
-                var paramDef = defGroup.GetOrCreateDefinitionInGroup(ApartmentValidationConstants.CWO_APARTMENTS_BEDS,
-                    SpecTypeId.Number);
-                areaExternalDefs.Add(paramDef);
-            }
-
-            if (areaElement.LookupParameter(ApartmentValidationConstants.CWO_APARTMENTS_PERSON) == null)
-            {
-                var paramDef = defGroup.GetOrCreateDefinitionInGroup(ApartmentValidationConstants.CWO_APARTMENTS_PERSON,
-                    SpecTypeId.Number);
-                areaExternalDefs.Add(paramDef);
-            }
-
-            if (areaElement.LookupParameter(ApartmentValidationConstants.CWO_APARTMENTS_PROP_BED_AREA) == null)
-            {
-                var paramDef = defGroup.GetOrCreateDefinitionInGroup(ApartmentValidationConstants.CWO_APARTMENTS_PROP_BED_AREA,
-                    SpecTypeId.Number);
-                areaExternalDefs.Add(paramDef);
-            }
-
-            if (areaElement.LookupParameter(ApartmentValidationConstants.CWO_APARTMENTS_MIN_BED_AREA) == null)
-            {
-                var paramDef = defGroup.GetOrCreateDefinitionInGroup(ApartmentValidationConstants.CWO_APARTMENTS_MIN_BED_AREA,
-                    SpecTypeId.Number);
-                areaExternalDefs.Add(paramDef);
-            }
-
-            if (areaElement.LookupParameter(ApartmentValidationConstants.CWO_APARTMENTS_PROP_STORE_AREA) == null)
-            {
-                var paramDef = defGroup.GetOrCreateDefinitionInGroup(ApartmentValidationConstants.CWO_APARTMENTS_PROP_STORE_AREA,
-                    SpecTypeId.Number);
-                areaExternalDefs.Add(paramDef);
-            }
-
-            if (areaElement.LookupParameter(ApartmentValidationConstants.CWO_APARTMENTS_MIN_STORE_AREA) == null)
-            {
-                var paramDef = defGroup.GetOrCreateDefinitionInGroup(ApartmentValidationConstants.CWO_APARTMENTS_MIN_STORE_AREA,
-                    SpecTypeId.Number);
-                areaExternalDefs.Add(paramDef);
-            }
-
-            if (areaElement.LookupParameter(ApartmentValidationConstants.CWO_APARTMENTS_ABOVE_TEN_PERC) == null)
-            {
-                var paramDef = defGroup.GetOrCreateDefinitionInGroup(ApartmentValidationConstants.CWO_APARTMENTS_ABOVE_TEN_PERC,
-                    SpecTypeId.String.Text);
-                areaExternalDefs.Add(paramDef);
-            }
-
-
-            var roomExternalDefs = new List<ExternalDefinition>();
-
-            if (roomElement.LookupParameter(Standards.ParameterNames.RoomType) == null)
-            {
-                var roomTypeDef = defGroup.GetOrCreateDefinitionInGroup(RoomValidationConstants.RoomName_ParamName,
-                SpecTypeId.String.Text);
-
-                roomExternalDefs.Add(roomTypeDef);
-            }
-
-            if (roomElement.LookupParameter(RoomValidationConstants.CWO_ROOMS_PROP_WIDTH) == null)
-            {
-                var achievedWidthDef = defGroup.GetOrCreateDefinitionInGroup(RoomValidationConstants.CWO_ROOMS_PROP_WIDTH, SpecTypeId.Number);
-
-                roomExternalDefs.Add(achievedWidthDef);
-            }
-
-            if (roomElement.LookupParameter(RoomValidationConstants.CWO_ROOMS_MIN_WIDTH) == null)
-            {
-                var requiredWidthDef = defGroup.GetOrCreateDefinitionInGroup(RoomValidationConstants.CWO_ROOMS_MIN_WIDTH, SpecTypeId.Number);
-
-                roomExternalDefs.Add(requiredWidthDef);
-            }
-
-
-
-            if (areaExternalDefs.Count > 0)
-            {
-                UiApp.ActiveUIDocument.Document.UseTransaction(() =>
-                {
-                    areaExternalDefs.TryAddToDocument(this.UiApp.ActiveUIDocument.Document,
-                    [BuiltInCategory.OST_Areas], BindingKind.Instance, GroupTypeId.IdentityData);
-                }, "Area Shared Parameters added");
-
-            }
-
-            if (roomExternalDefs.Count > 0)
-            {
-                UiApp.ActiveUIDocument.Document.UseTransaction(() =>
-                {
-                    roomExternalDefs.TryAddToDocument(this.UiApp.ActiveUIDocument.Document,
-                    [BuiltInCategory.OST_Rooms], BindingKind.Instance, GroupTypeId.IdentityData);
-                }, "Room Shared Parameter added");
-
-            }
-        }
-
         public void SetApartmentParameters()
         {
             var doc = UiApp.ActiveUIDocument.Document;
             var lengthUnitType = SpecTypeId.Length;
             var areaUnitType = SpecTypeId.Area;
-            var currentLengthDisplayUnits = doc.GetUnits().GetFormatOptions(lengthUnitType).GetUnitTypeId();
-            var currentAreaDisplayUnits = doc.GetUnits().GetFormatOptions(areaUnitType).GetUnitTypeId();
+            var desiredLengthDisplayUnits = doc.GetUnits().GetFormatOptions(lengthUnitType).GetUnitTypeId();
+            var desiredAreaDisplayUnits = doc.GetUnits().GetFormatOptions(areaUnitType).GetUnitTypeId();
 
-            //bool convertArea = currentAreaDisplayUnits != UnitTypeId.SquareMeters;
 
             foreach (var apt in this.Apartments)
             {
+
                 #region Apartment Parameteres
                 //This parameter to store the minimum overall apartment floor area required.
                 var p = apt.AreaBoundary.LookupParameter(ApartmentValidationConstants.CWO_APARTMENTS_MIN_AREA);
@@ -577,14 +485,13 @@ namespace CWO_App.UI.Models.ApartmentValidation
 
                     if (aV != null)
                     {
-
-                        double sqFt = aV.RequiredArea.FromUnit(UnitTypeId.SquareMeters); //UnitUtils.Convert(aV.RequiredArea, currentAreaDisplayUnits, UnitTypeId.SquareMeters);
+                        double sqFt = aV.RequiredArea.FromUnit(UnitTypeId.SquareMeters); 
                         bool success = p.Set(sqFt);
                     }
 
                     //This parameter to store whether or not the apartment area is above 10% of the minimum overall floor area required.
                     p = apt.AreaBoundary.LookupParameter(ApartmentValidationConstants.CWO_APARTMENTS_ABOVE_TEN_PERC);
-                    p?.Set(aV.IsGreaterThan(Standards.AdditionalInfo.AdditionalApartmentAreaPercentage));
+                    p?.Set(aV.IsGreaterThan(Standards.AdditionalInfo.AdditionalApartmentAreaPercentage).ToString());
                 }
 
                 //This parameter to store the number of bedrooms in the apartment.
@@ -593,12 +500,12 @@ namespace CWO_App.UI.Models.ApartmentValidation
                 {
                     var bedCount = apt.Rooms.Where(r => r is Bedroom).Count();
 
-                    p.Set(bedCount);
+                    p.Set(bedCount.ToString());
                 }
 
                 //This parameter to store the number of persons in the apartment.
                 p = apt.AreaBoundary.LookupParameter(ApartmentValidationConstants.CWO_APARTMENTS_PERSON);
-                p?.Set(apt.Occupancy);
+                p?.Set(apt.Occupancy.ToString());
 
                 var aG = apt.ApartmentValidationData.FirstOrDefault(v=>v is AggregateAreaValidation) as AggregateAreaValidation;
 
@@ -607,15 +514,17 @@ namespace CWO_App.UI.Models.ApartmentValidation
                 p = apt.AreaBoundary.LookupParameter(ApartmentValidationConstants.CWO_APARTMENTS_PROP_BED_AREA);
                 if (p != null && aG != null)
                 {
-                    double sqFt = aG.AchievedAreas.Sum().FromUnit(UnitTypeId.SquareMeters);//UnitUtils.Convert(Math.Round(aG.AchievedAreas.Sum(), 2), currentAreaDisplayUnits, UnitTypeId.SquareMeters);
-                        p.Set(sqFt);
+                    double sqFt = aG.AchievedAreas.Sum().FromUnit(UnitTypeId.SquareMeters);
+                    
+                    p.Set(sqFt);
                 }
 
                 //This parameter to store the minimum aggregate bedroom floor area required for the apartment.
                 p = apt.AreaBoundary.LookupParameter(ApartmentValidationConstants.CWO_APARTMENTS_MIN_BED_AREA);
                 if (p != null && aG != null)
                 {
-                    double sqFt = aG.RequiredAreas.Sum().FromUnit(UnitTypeId.SquareMeters); //UnitUtils.Convert(Math.Round(aG.RequiredAreas.Sum(), 2), UnitTypeId.SquareMeters, currentAreaDisplayUnits);
+                    double sqFt = aG.RequiredAreas.Sum().FromUnit(UnitTypeId.SquareMeters); 
+
                     p.Set(sqFt);
                 }
 
@@ -626,7 +535,8 @@ namespace CWO_App.UI.Models.ApartmentValidation
                 p = apt.AreaBoundary.LookupParameter(ApartmentValidationConstants.CWO_APARTMENTS_PROP_STORE_AREA);
                 if (p != null && aG != null)
                 {
-                    double sqFt = cV.CombinedArea.FromUnit(UnitTypeId.SquareMeters);//UnitUtils.Convert(Math.Round(cV.CombinedArea, 2), UnitTypeId.SquareMeters, currentAreaDisplayUnits);
+                    double sqFt = cV.CombinedArea.FromUnit(UnitTypeId.SquareMeters);
+
                     p.Set(sqFt);
                 }
 
@@ -634,7 +544,7 @@ namespace CWO_App.UI.Models.ApartmentValidation
                 p = apt.AreaBoundary.LookupParameter(ApartmentValidationConstants.CWO_APARTMENTS_MIN_STORE_AREA);
                 if (p != null && aG != null)
                 {
-                    double sqFt = cV.RequiredArea.FromUnit(UnitTypeId.SquareMeters); //UnitUtils.Convert(Math.Round(cV.RequiredArea, 2), UnitTypeId.SquareMeters, currentAreaDisplayUnits);
+                    double sqFt = cV.RequiredArea.FromUnit(UnitTypeId.SquareMeters); 
                     p.Set(sqFt);
                 }
 
@@ -665,13 +575,16 @@ namespace CWO_App.UI.Models.ApartmentValidation
                         {
                             var dV = validation as DimensionValidation;
 
-                            double fT = dV.RequiredMinWidth.FromUnit(UnitTypeId.Meters);//UnitUtils.Convert(dV.RequiredMinWidth, UnitTypeId.Meters, currentLengthDisplayUnits); //dV.RequiredMinWidth.FromMillimeters();
+                            //var unt = Math.Round(UnitUtils.Convert(dV.RequireundMinWidth, UnitTypeId.Meters, desiredLengthDisplayUnits),2).ToString();
+                            double fT = dV.RequiredMinWidth.FromUnit(UnitTypeId.Meters);
+
                             p.Set(fT);
 
                             //This parameter to store the proposed width of the room.
                             p = rm.Room.LookupParameter(RoomValidationConstants.CWO_ROOMS_PROP_WIDTH);
 
-                            fT = dV.AchievedMinWidth.FromUnit(UnitTypeId.Meters); //UnitUtils.Convert(dV.AchievedMinWidth, UnitTypeId.Meters, currentLengthDisplayUnits); //dV.AchievedMinWidth.FromMillimeters();
+                            //unt = Math.Round(UnitUtils.Convert(dV.AchievedMinWidth, UnitTypeId.Meters, desiredLengthDisplayUnits),2).ToString();
+                            fT = dV.AchievedMinWidth.FromUnit(UnitTypeId.Meters); 
 
                             p?.Set(fT);
                         }

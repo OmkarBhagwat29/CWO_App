@@ -48,8 +48,9 @@ namespace CWO_App.UI.ViewModels.KeynotesCreationViewModel
         [ObservableProperty] private ObservableCollection<string> _categoryNames = [];
         [ObservableProperty] private string _selectedCategoryName;
 
-        [ObservableProperty] private ObservableCollection<string> _familyNames = [];
-        [ObservableProperty] private string _selectedFamilyName;
+        [ObservableProperty] private string _searchFamilyText;
+        //[ObservableProperty] private ObservableCollection<string> _familyNames = [];
+        //[ObservableProperty] private string _selectedFamilyName;
 
 
         [ObservableProperty] private string _searchKeynoteText;
@@ -65,10 +66,13 @@ namespace CWO_App.UI.ViewModels.KeynotesCreationViewModel
             this.FilterKeynotes(newValue);
         }
 
-        partial void OnSelectedFamilyNameChanged(string oldValue, string newValue)
+
+
+        partial void OnSearchFamilyTextChanged(string oldValue, string newValue)
         {
             if (this.FamilyCollection == null) return;
-                this.FamilyCollection.View.Refresh();
+
+            this.FamilyCollection.View.Refresh();
         }
 
 
@@ -78,14 +82,15 @@ namespace CWO_App.UI.ViewModels.KeynotesCreationViewModel
 
             Task.Run(async () =>
             {
-                await _asyncExternalHandler.RaiseAsync((uiApp) => {
+                await _asyncExternalHandler.RaiseAsync((uiApp) =>
+                {
 
                     var doc = uiApp.ActiveUIDocument.Document;
 
                     var name = Path.GetFileNameWithoutExtension(doc.PathName);
 
                     this.KeynoteFileName = name;
-                
+
                 });
             });
         }
@@ -176,18 +181,12 @@ namespace CWO_App.UI.ViewModels.KeynotesCreationViewModel
             return result;
         }
 
-
         partial void OnSelectedCategoryNameChanged(string oldValue, string newValue)
         {
-            this.FamilyNames.Clear();
+            if (this.FamilyData == null || this.FamilyData.Count == 0)
+                return;
 
-
-            this.FamilyData.Where(f => f.CategoryName == newValue)
-                .GroupBy(f => f.FamilyName)
-                .ToList()
-                .ForEach(f => this.FamilyNames.Add(f.Key));
-
-            this.SelectedFamilyName = this.FamilyNames.FirstOrDefault();
+            this.FamilyCollection.View.Refresh();
         }
 
         [RelayCommand]
@@ -211,7 +210,7 @@ namespace CWO_App.UI.ViewModels.KeynotesCreationViewModel
                 _model.Set_UniclassExcelFile(excelFile);
             }
 #else
-      System.Windows.Forms.OpenFileDialog openFileDialog = new();
+            System.Windows.Forms.OpenFileDialog openFileDialog = new();
 
             openFileDialog.Filter = "Excel Files|*.xls;*.xlsx;*.xlsm";
             openFileDialog.Title = "Select Uniclass Excel File";
@@ -276,14 +275,14 @@ namespace CWO_App.UI.ViewModels.KeynotesCreationViewModel
 #else
             FolderBrowserDialog folderBrowserDialog = new FolderBrowserDialog();
 
-        // Show the dialog and capture the result
-        DialogResult result = folderBrowserDialog.ShowDialog();
+            // Show the dialog and capture the result
+            DialogResult result = folderBrowserDialog.ShowDialog();
 
-        if (result == DialogResult.OK)
-        {
-            // Get the selected folder path
-            _model.Set_KeynoteFileFolderPath(folderBrowserDialog.SelectedPath);
-        }
+            if (result == DialogResult.OK)
+            {
+                // Get the selected folder path
+                _model.Set_KeynoteFileFolderPath(folderBrowserDialog.SelectedPath);
+            }
 #endif
         }
 
@@ -356,7 +355,7 @@ namespace CWO_App.UI.ViewModels.KeynotesCreationViewModel
                                 string splitString = "Autodesk Docs://";
                                 if (path.Contains(splitString))
                                 {
-                                    var splitFilePath = path.Split(new string[] {splitString},StringSplitOptions.None)[1];
+                                    var splitFilePath = path.Split(new string[] { splitString }, StringSplitOptions.None)[1];
                                     splitFilePath = splitFilePath.Replace('/', '\\');
                                     string folder = LocalDirectoryManager.UserProfileFolder;
 
@@ -388,7 +387,7 @@ namespace CWO_App.UI.ViewModels.KeynotesCreationViewModel
 
                     LoadTreeNodes(_model.KeynoteLines);
 
-                   doc.UseTransaction(() => doc.LoadKeynoteFile(_model.GetKeynoteFilePath()), "Keynote file loaded");
+                    doc.UseTransaction(() => doc.LoadKeynoteFile(_model.GetKeynoteFilePath()), "Keynote file loaded");
 
                     this.SetFamilyTypeData(doc);
                 });
@@ -403,8 +402,8 @@ namespace CWO_App.UI.ViewModels.KeynotesCreationViewModel
         }
 
         [RelayCommand]
-        public async Task  ApplyKeynotes()
-        { 
+        public async Task ApplyKeynotes()
+        {
             var famKeynotes = this.FamilyData.Where(f => f.KeynoteCode != null && f.KeynoteCode != string.Empty).ToList();
 
             if (famKeynotes.Count == 0)
@@ -412,11 +411,13 @@ namespace CWO_App.UI.ViewModels.KeynotesCreationViewModel
             try
             {
 
-                await _asyncExternalHandler.RaiseAsync((uiApp) => {
+                await _asyncExternalHandler.RaiseAsync((uiApp) =>
+                {
 
                     var doc = uiApp.ActiveUIDocument.Document;
 
-                    doc.UseTransaction(() => {
+                    doc.UseTransaction(() =>
+                    {
 
                         List<string> messages = [];
                         foreach (var fam in famKeynotes)
@@ -457,7 +458,7 @@ namespace CWO_App.UI.ViewModels.KeynotesCreationViewModel
             }
             catch
             {
-               
+
 
             }
 
@@ -476,11 +477,10 @@ namespace CWO_App.UI.ViewModels.KeynotesCreationViewModel
         {
             this.FamilyData.Clear();
             this.CategoryNames.Clear();
-            this.FamilyNames.Clear();
 
-            var types = doc.GetElementsByType<ElementType>((e)=>e.Category!=null)
+            var types = doc.GetElementsByType<ElementType>((e) => e.Category != null)
                 .ToList();
-            
+            var vMs = new List<FamilyInfo_ViewModel>();
             foreach (var eleType in types)
             {
                 var categoryName = eleType.Category.Name;
@@ -493,26 +493,27 @@ namespace CWO_App.UI.ViewModels.KeynotesCreationViewModel
                     ElementId = eleType.Id,
                 };
 
-                this.FamilyData.Add(c);
+                vMs.Add(c);
 
-                if (!this.FamilyNames.Contains(eleType.FamilyName))
-                    this.FamilyNames.Add(eleType.FamilyName);
 
-                if(!this.CategoryNames.Contains(categoryName))
+
+                if (!this.CategoryNames.Contains(categoryName))
                     this.CategoryNames.Add(categoryName);
             }
 
             this.CategoryNames.Insert(0, string.Empty);
-            this.FamilyNames.Insert(0, string.Empty);
 
             this.SelectedCategoryName = string.Empty;
-            this.SelectedFamilyName = string.Empty;
 
             var cNames = this.CategoryNames.OrderBy(c => c).ToList();
 
             this.CategoryNames.Clear();
 
             cNames.ForEach(cN => this.CategoryNames.Add(cN));
+
+            vMs = vMs.OrderBy(v => v.FamilyName).ToList();
+
+            vMs.ForEach(v=>this.FamilyData.Add(v));
 
             this.FamilyCollection = new CollectionViewSource()
             {
@@ -528,14 +529,34 @@ namespace CWO_App.UI.ViewModels.KeynotesCreationViewModel
         {
             var familyData = (FamilyInfo_ViewModel)e.Item;
 
-            if (this.SelectedCategoryName == null || this.SelectedCategoryName == string.Empty || this.SelectedFamilyName == string.Empty)
+            if ((this.SelectedCategoryName == null 
+                || this.SelectedCategoryName == string.Empty) && string.IsNullOrWhiteSpace(this.SearchFamilyText))
             {
+                //show all
                 e.Accepted = true;
+            }
+            else if ((this.SelectedCategoryName != null ||
+                this.SelectedCategoryName != string.Empty)
+                && string.IsNullOrWhiteSpace(this.SearchFamilyText))
+            {
+                //category search
+                bool found = familyData.CategoryName.Contains(this.SelectedCategoryName, StringComparison.CurrentCultureIgnoreCase);
+                e.Accepted = found;
             }
             else
             {
-                e.Accepted = familyData.CategoryName.Contains(this.SelectedCategoryName, StringComparison.CurrentCultureIgnoreCase) &&
-                    familyData.FamilyName.Contains(this.SelectedFamilyName, StringComparison.CurrentCultureIgnoreCase);
+                //category and search text search
+                var catAssigned = familyData.CategoryName.Contains(this.SelectedCategoryName, StringComparison.CurrentCultureIgnoreCase);
+
+                if (catAssigned)
+                {
+                    bool found = familyData.FamilyTypeName.Contains(this.SearchFamilyText, StringComparison.CurrentCultureIgnoreCase) ||
+                        familyData.FamilyName.Contains(this.SearchFamilyText,StringComparison.CurrentCultureIgnoreCase);
+                    e.Accepted = found;
+                }
+                else
+                    e.Accepted = false;
+
             }
         }
 

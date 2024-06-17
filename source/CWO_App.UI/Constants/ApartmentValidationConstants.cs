@@ -13,12 +13,11 @@ namespace CWO_App.UI.Constants
         public const string ThreeBedroomSixPerson_Name = "3 BED(6)";
 
 
-        public const string SharedParameterGroupName = "01. Apartments";
-        public const string CWO_APARTMENTS_TYPE = "Dwelling Type";
+        public const string SharedParameterGroupName = "01. APARTMENTS";
+        public const string CWO_APARTMENTS_TYPE = "CWO_APARTMENTS_TYPE";
 
         public const string CWO_APARTMENTS_NUMBER = "CWO_APARTMENTS_NUMBER";
         public const string CWO_APARTMENTS_MIN_AREA = "CWO_APARTMENTS_MIN_AREA";
-        public const string AreaWith10Percentage_ParamName = "AreaWith10Percentage_ParamName";
         public const string CWO_APARTMENTS_BEDS = "CWO_APARTMENTS_BEDS";
         public const string CWO_APARTMENTS_PERSON = "CWO_APARTMENTS_PERSON";
 

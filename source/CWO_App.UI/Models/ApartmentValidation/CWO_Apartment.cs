@@ -40,7 +40,7 @@ namespace CWO_App.UI.Models.ApartmentValidation
             StringComparison.CurrentCultureIgnoreCase)).ToList();
 
             var bathrooms = rooms.Where(r =>
-            r.LookupParameter("Name").AsString()
+            r.LookupParameter(RoomValidationConstants.RoomName_ParamName).AsString()
             .Contains(RoomValidationConstants.Bathroom_Name, StringComparison.CurrentCultureIgnoreCase)).ToList();
 
             if (bathrooms.Count == 0)
@@ -139,6 +139,7 @@ namespace CWO_App.UI.Models.ApartmentValidation
 
             foreach (var ass in associations)
             {
+
                 var apt = CreateApartment(ass.AreaBoundary, ass.Rooms, standards, _logger);
 
                 if (apt == null)
@@ -181,9 +182,9 @@ namespace CWO_App.UI.Models.ApartmentValidation
                     };
                     apartment.AddRoom(kld);
                 }
-                else if (val.Equals(RoomValidationConstants.StorageRoomName_Name,
-                    StringComparison.CurrentCultureIgnoreCase) || val.Equals(RoomValidationConstants.StorageRoomName_Name_2,
-                    StringComparison.CurrentCultureIgnoreCase))
+                else if (val.Equals(RoomValidationConstants.StorageRoomName_Name, StringComparison.CurrentCultureIgnoreCase) ||
+                    val.Equals(RoomValidationConstants.StorageRoomName_Name_2,StringComparison.CurrentCultureIgnoreCase) ||
+                    val.Equals(RoomValidationConstants.StorageRoomName_Name_3, StringComparison.CurrentCultureIgnoreCase))
                 {
                     var storage = new Storage(rm)
                     {
@@ -322,9 +323,9 @@ namespace CWO_App.UI.Models.ApartmentValidation
 
                 var roomSolid = room.ComputeRoomSolid(sebOptions, out List<XYZ> roomBoundaryPoints);
 
-
                 DimensionValidation dV = new(roomSolid, roomBoundaryPoints, room.MinimumWidth, room.GetType());
                 room.AddValidationData(dV);
+
             }
 
         }

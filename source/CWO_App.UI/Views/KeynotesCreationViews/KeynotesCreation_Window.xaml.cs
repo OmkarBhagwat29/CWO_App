@@ -37,5 +37,19 @@ namespace CWO_App.UI.Views.KeynotesCreationViews
                 vm?.OnKeynoteDoubleClicked(keynote);
             }
         }
+
+        private void CopyMenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            if (keynoteTrv.SelectedItem != null)
+            {
+                var selectedItem = keynoteTrv.SelectedItem;
+
+                // Get the details of the selected item. Assuming it has Category and Description properties.
+                var category = selectedItem.GetType().GetProperty("Category")?.GetValue(selectedItem, null)?.ToString();
+
+                // Copy the  string to clipboard
+                Clipboard.SetText($"{category}");
+            }
+        }
     }
 }

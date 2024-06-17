@@ -46,6 +46,25 @@ namespace CWO_App.UI.ViewModels.ApartmentValidation
                 //Validate
                 _externalHandler.Raise((uiApp) => {
 
+
+                    _model = new ApartmentValidationModel(_logger, uiApp, _standards);
+                    var file = uiApp.Application.OpenSharedParameterFile();
+                    if (file == null)
+                    {
+                        TaskDialog.Show("Message", "Shared Parameter File Not Found");
+                        //WindowController.Close<ApartmentValidation_Window>();
+                        return;
+                    }
+                    _model.SetDefinitionFile(file);
+
+                    bool sharedParamExists = _model.CheckSharedParametersExists();
+                    if (!sharedParamExists)
+                    {
+                        TaskDialog.Show("Message", "No Shared Parameters found for Validation.\nUse correct shared parameter file");
+                        //WindowController.Close<ApartmentValidation_Window>();
+                        return;
+                    }
+
                     var spatialElements = uiApp.ActiveUIDocument.Document
                     .GetElements<SpatialElement>();
                     _areaElement = spatialElements.Where(e => e is Area).FirstOrDefault();
@@ -70,18 +89,24 @@ namespace CWO_App.UI.ViewModels.ApartmentValidation
                         return;
                     }
 
-                    _model = new ApartmentValidationModel(_logger, uiApp, _standards);
 
                     ApartmentValidationModel.CheckRequiredParametersExists(_areaElement, _roomElement, out List<string> missingParams);
 
                     if (missingParams.Count > 0)
                     {
-                        TaskDialog.Show("Message", String.Join(Environment.NewLine,missingParams)); 
+                        // TaskDialog.Show("Message", String.Join(Environment.NewLine,missingParams)); 
 
-                       // WindowController.Close<ApartmentValidation_Window>();
+                        uiApp.ActiveUIDocument.Document.UseTransaction(() =>
+                        {
 
-                        return;
+                            _model.CreateProjectParameters();
+
+                            
+                        },
+                            "Assigned Project Params");
                     }
+
+                    _parametersFound = true;
                 });
             }
             catch (Exception)
@@ -104,6 +129,8 @@ namespace CWO_App.UI.ViewModels.ApartmentValidation
 
         [ObservableProperty]private ObservableCollection<ValidationResult> _widthValidationResults = [];
         [ObservableProperty]private ObservableCollection<ValidationResult> _areaValidationResults = [];
+
+        bool _parametersFound = false;
 
 
         public ICommand ItemDoubleClickCommand { get; }
@@ -134,11 +161,14 @@ namespace CWO_App.UI.ViewModels.ApartmentValidation
                    _model.SetApartments();
                    _model.Validate();
 
-                   if (_model.Apartments.Count == 0)
-                   {
-                       TaskDialog.Show("Message", "No Apartments Found");
-                   }
+
                 });
+
+                if (_model.Apartments.Count == 0)
+                {
+                    TaskDialog.Show("Message", "No Apartments Found");
+                    return;
+                }
 
                 this.WidthValidationResults.Clear();
                 this.AreaValidationResults.Clear();
@@ -175,6 +205,13 @@ namespace CWO_App.UI.ViewModels.ApartmentValidation
                 return;
             }
 
+            if (_parametersFound == false)
+            {
+                TaskDialog.Show("Message", "Validation Parameters not found.\nCheck Correct Shared Parameter File is Used &" +
+                    "Project Parameters are assigned to Areas and Rooms");
+                return;
+            }
+
             try
             {
                 await _asyncExternalHandler.RaiseAsync((uiApp) => {
@@ -198,65 +235,5 @@ namespace CWO_App.UI.ViewModels.ApartmentValidation
 
         }
 
-        /// <summary>
-        /// Use this to create shared parameters
-        /// </summary>
-        /// <returns></returns>
-        public async Task AssignValidationParameters()
-        {
-            this.AreaValidationResults.Clear();
-            this.WidthValidationResults.Clear();
-            try
-            {
-                await _asyncExternalHandler.RaiseAsync((uiApp) =>
-                {
-                    _model = new ApartmentValidationModel(_logger, uiApp, _standards);
-
-                    var definitionFile = uiApp.Application.OpenSharedParameterFile();
-                    if (definitionFile == null)
-                    {
-                        TaskDialog.Show("Message", "No Shared Parameter File Found, Please create on to Procced");
-
-                        WindowController.Close<ApartmentValidation_Window>();
-
-                        return;
-                    }
-                    _model.SetDefinitionFile(definitionFile);
-
-                    _model.CreateAndAssignRequiredParameters(_areaElement, _roomElement);
-
-                    TaskDialog.Show("Message", "Validation Parameters Assigned to Room and Areas Successfully");
-                });
-            }
-            catch (Exception)
-            {
-                TaskDialog.Show("Error", "Can not assign validation parameters to the project");
-                return;
-            }
-
-        }
-
-        [RelayCommand]
-        public async Task CreateSchedules()
-        {
-            try
-            {
-                await _asyncExternalHandler.RaiseAsync((uiApp) => {
-
-                    //get area scheme iD
-                    //var scheme = uiApp.ActiveUIDocument
-                    // .Document
-                    // .GetElements<AreaScheme>()
-                    // .FirstOrDefault(s => s.Name == this.SelectedAreaSchemeName);
-
-                    //_model.CreateAreaValidationSchedule(scheme.Id);
-                });
-
-            }
-            catch (Exception)
-            {
-                throw;
-            }
-        }
     }
 }

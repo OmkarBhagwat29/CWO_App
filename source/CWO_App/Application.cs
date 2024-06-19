@@ -42,7 +42,9 @@ namespace CWO_App
 
                 CreateKeynotes_Command.CreateKeynotesCreationButton(generalPanel);
 
-                ACC_Command.LaunchACCButton(accPanel);
+                BrickEvaluator_Command.CreateBrickEvaluatorButton(generalPanel);
+
+                ACC_Command.CreateACCButton(accPanel);
             }
             catch
             {

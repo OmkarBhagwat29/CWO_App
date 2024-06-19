@@ -42,9 +42,11 @@ namespace CWO_App
 
             //add here services like views and VM
              builder.Services.AddTransient<IWindowService, WindowService>();
-            //builder.Services.AddTransient<BrickEvaluatorShowWindow>(); 
-            //builder.Services.AddTransient<BrickEvaluator_View>();
-            //builder.Services.AddTransient<BrickEvaluator_ViewModel>();
+
+
+            builder.Services.AddTransient<BrickEvaluatorShowWindow>();
+            builder.Services.AddTransient<BrickWindow>();
+            builder.Services.AddTransient<BrickEvaluator_ViewModel>();
 
 
             builder.Services.AddTransient<FamilyParameters_ViewModel>();

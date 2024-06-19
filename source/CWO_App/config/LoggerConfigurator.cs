@@ -38,9 +38,13 @@ namespace CWO_App.config
 
         private static Logger CreateDefaultLogger()
         {
+            //return new LoggerConfiguration()
+            //    .WriteTo.Debug(LogEventLevel.Debug, LogTemplate)
+            //    .MinimumLevel.Debug()
+            //    .CreateLogger();
+
             return new LoggerConfiguration()
-                .WriteTo.Debug(LogEventLevel.Debug, LogTemplate)
-                .MinimumLevel.Debug()
+                .WriteTo.File(@"logs/cwoApp.txt", rollingInterval: RollingInterval.Day)
                 .CreateLogger();
         }
 

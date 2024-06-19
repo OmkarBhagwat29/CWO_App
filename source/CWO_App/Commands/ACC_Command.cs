@@ -38,7 +38,7 @@ namespace CWO_App.Commands
 
         }
 
-        public static void LaunchACCButton(RibbonPanel panel)
+        public static void CreateACCButton(RibbonPanel panel)
         {
             var assembly = Assembly.GetExecutingAssembly();
             panel.AddItem(new PushButtonData(MethodBase.GetCurrentMethod().DeclaringType?.Name,

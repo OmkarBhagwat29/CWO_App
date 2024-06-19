@@ -40,8 +40,10 @@ namespace CWO_App.UI.ViewModels.ApartmentValidation
                 if (_standards == null)
                 {
                     TaskDialog.Show("Message", "Unable to read Validation Standard File. Please Check the file!!!");
+                    this._logger.LogError("\"Unable to read Validation Standard File!!!");
                     return;
                 }
+               
 
                 //Validate
                 _externalHandler.Raise((uiApp) => {

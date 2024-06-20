@@ -41,7 +41,7 @@ namespace CWO_App.Commands
         {
             var assembly = Assembly.GetExecutingAssembly();
             panel.AddItem(new PushButtonData(MethodBase.GetCurrentMethod().DeclaringType?.Name,
-                $"Brick Evaluator", assembly.Location, MethodBase.GetCurrentMethod().DeclaringType?.FullName)
+                $"Brick\nEvaluator", assembly.Location, MethodBase.GetCurrentMethod().DeclaringType?.FullName)
             {
                 ToolTip = "Brick Evaluator",
                 LargeImage = ImageUtils.LoadImage(assembly, "BrickCalculator_32x32.png")

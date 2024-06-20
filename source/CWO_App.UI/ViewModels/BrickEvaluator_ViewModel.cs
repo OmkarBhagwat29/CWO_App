@@ -29,7 +29,7 @@ namespace CWO_App.UI.ViewModels
 
         [ObservableProperty] private float _wallLength = 900;
 
-        [ObservableProperty] private string _checkResultText;
+        [ObservableProperty] private string _checkResultText = "Click on 'Check' to see results";
 
         public BrickEvaluator_ViewModel(ILogger<BrickEvaluator_ViewModel> logger, IWindowService windowService)
         {
@@ -237,40 +237,50 @@ namespace CWO_App.UI.ViewModels
         [RelayCommand]
         public void CheckNumber()
         {
-            float f = this.WallLength;
-            float brickDim = f % 112.5f;
-            float minCOMinus = f - brickDim - 10.0f;
-            float minCO = f - brickDim;
-            float minCOPlus = f - brickDim + 10.0f;
-            float maxCOMinus = minCOMinus + 112.5f;
-            float maxCO = minCOMinus + 122.5f;
-            float maxCOPlus = minCOMinus + 132.5f;
+            try
+            {
+                float f = this.WallLength;
 
-            string message;
-            //window.checkResult.Inlines.Clear();
-            this.CheckResultText = string.Empty;
 
-            if (brickDim == 102.5f)
-            {
-                message = $"{f} is a CO- brick dimension.{Environment.NewLine}CO = {f + 10.0f}{Environment.NewLine}CO+ = {f + 20.0f}{Environment.NewLine}Bricks = {(f + 10.0f) / 112.5f / 2.0}";
+                float brickDim = f % 112.5f;
+                float minCOMinus = f - brickDim - 10.0f;
+                float minCO = f - brickDim;
+                float minCOPlus = f - brickDim + 10.0f;
+                float maxCOMinus = minCOMinus + 112.5f;
+                float maxCO = minCOMinus + 122.5f;
+                float maxCOPlus = minCOMinus + 132.5f;
+
+                string message;
+                //window.checkResult.Inlines.Clear();
+                this.CheckResultText = string.Empty;
+
+                if (brickDim == 102.5f)
+                {
+                    message = $"{f} is a CO- brick dimension.{Environment.NewLine}CO = {f + 10.0f}{Environment.NewLine}CO+ = {f + 20.0f}{Environment.NewLine}Bricks = {(f + 10.0f) / 112.5f / 2.0}";
+                }
+                else if (brickDim == 0)
+                {
+                    message = $"{f} is a CO brick dimension.{Environment.NewLine}CO- = {f - 10.0f}{Environment.NewLine}CO+ = {f + 10.0f}{Environment.NewLine}Bricks = {f / 112.5f / 2.0}";
+                }
+                else if (brickDim == 10)
+                {
+                    message = $"{f} is a CO+ brick dimension.{Environment.NewLine}CO = {f - 10.0f}{Environment.NewLine}CO- = {f - 20.0f}{Environment.NewLine}Bricks = {(f - 10.0f) / 112.5f / 2.0}";
+                }
+                else
+                {
+                    message = $"{f} is a Brick Special.{Environment.NewLine}See below closest brick dimensions:{Environment.NewLine}{minCOMinus} / {minCO} / {minCOPlus}{Environment.NewLine}" +
+                        $"-- or --{Environment.NewLine}{maxCOMinus} / {maxCO} / {maxCOPlus}{Environment.NewLine}Modulus = {brickDim}{Environment.NewLine}Difference = {Math.Abs(brickDim - 112.5f)}";
+                }
+
+                //window.checkResult.Inlines.Add(message);
+                this.CheckResultText = message;
+                AddToHistory(f);
             }
-            else if (brickDim == 0)
+            catch
             {
-                message = $"{f} is a CO brick dimension.{Environment.NewLine}CO- = {f - 10.0f}{Environment.NewLine}CO+ = {f + 10.0f}{Environment.NewLine}Bricks = {f / 112.5f / 2.0}";
-            }
-            else if (brickDim == 10)
-            {
-                message = $"{f} is a CO+ brick dimension.{Environment.NewLine}CO = {f - 10.0f}{Environment.NewLine}CO- = {f - 20.0f}{Environment.NewLine}Bricks = {(f - 10.0f) / 112.5f / 2.0}";
-            }
-            else
-            {
-                message = $"{f} is a Brick Special.{Environment.NewLine}See below closest brick dimensions:{Environment.NewLine}{minCOMinus} / {minCO} / {minCOPlus}{Environment.NewLine}" +
-                    $"-- or --{Environment.NewLine}{maxCOMinus} / {maxCO} / {maxCOPlus}{Environment.NewLine}Modulus = {brickDim}{Environment.NewLine}Difference = {Math.Abs(brickDim - 112.5f)}";
+
             }
 
-            //window.checkResult.Inlines.Add(message);
-            this.CheckResultText = message;
-            AddToHistory(f);
         }
 
         private void AddToHistory(float f)

@@ -13,9 +13,10 @@ namespace CWO_App.UI.Views
     {
         // BrickViewModel brickViewModel;
         private readonly IWindowService _windowService;
+        private BrickEvaluator_ViewModel _vm;
         public BrickWindow(BrickEvaluator_ViewModel vm)
         {
-            //brickViewModel = vm;
+            _vm = vm;
             DataContext = vm;
             _windowService = vm.WindowService;
             Loaded += BrickWindow_Loaded;
@@ -48,14 +49,16 @@ namespace CWO_App.UI.Views
             var item = sender as ListViewItem;
             BrickSpecial b = item.Content as BrickSpecial;
             //calcValue.Text = b.Value.ToString();
-            //brickViewModel.CheckNumber(b.Value.ToString());
+            _vm.WallLength = b.Value;
+            _vm.CheckNumber();
         }
         private void historyItemClick(object sender, RoutedEventArgs e)
         {
             var item = sender as ListViewItem;
             BrickSpecial b = item.Content as BrickSpecial;
             //calcValue.Text = b.Value.ToString();
-           // brickViewModel.CheckNumber(b.Value.ToString());
+            _vm.WallLength = b.Value;
+            _vm.CheckNumber();
         }
     }
 }

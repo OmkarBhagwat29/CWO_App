@@ -54,16 +54,20 @@
                         <ColumnDefinition Width="50"/>
                     </Grid.ColumnDefinitions>
                     <Label Content="Enter Value:" Grid.Column="0"/>
-                    <TextBox x:Name="calcValue" Margin="5,0" Grid.Column="1" VerticalContentAlignment="Center" Text="{Binding  WallLength}"/>
+                    
+                    <TextBox Margin="5,0" Grid.Column="1" 
+                             VerticalContentAlignment="Center" Text="{Binding  WallLength}"/>
+                    
                     <Button Content="Check" Grid.Column="2" Command="{Binding CheckNumberCommand}" />
                 </Grid>
-                <TextBlock x:Name="checkResult" 
+                <TextBlock 
                            Margin="0 10" Padding="5" 
                            Background="#FFF3F3F3" 
                            TextWrapping="Wrap"
-                           Text="{Binding CheckResultText}">
-            Click on 'Check' to see results.
-                </TextBlock>
+                           Text="{Binding CheckResultText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                           />
+                <!--Click on 'Check' to see results.-->
+
                 <Separator/>
 
                 <Expander HorizontalAlignment="Left" Header="HISTORY" Padding="0, 3">

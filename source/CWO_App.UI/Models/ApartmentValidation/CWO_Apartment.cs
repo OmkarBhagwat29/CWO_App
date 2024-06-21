@@ -130,6 +130,7 @@ namespace CWO_App.UI.Models.ApartmentValidation
             return apt;
         }
 
+        
         public static List<CWO_Apartment> CreateApartmentsAndSetApartmentTypeInProject(
             Document doc, ILogger _logger,
             List<AreaRoomAssociation> associations,
@@ -159,6 +160,7 @@ namespace CWO_App.UI.Models.ApartmentValidation
             return apts;
         }
 
+        
         private static void AddRoomsToApartment(CWO_Apartment apartment,
             List<Room> rooms, ApartmentStandards standards,
             ApartmentValidationData validationData)
@@ -171,12 +173,14 @@ namespace CWO_App.UI.Models.ApartmentValidation
                     continue;
                 var val = param.AsString();
 
-                if (val.Equals(RoomValidationConstants.KitchenLivingDinning_Name,
+                if (val.Equals(RoomValidationConstants.KitchenLivingDinning_Name_1,
+                    StringComparison.CurrentCultureIgnoreCase) ||
+                    val.Equals(RoomValidationConstants.KitchenLivingDinning_Name_2,
                     StringComparison.CurrentCultureIgnoreCase))
                 {
                     var kld = new KLD(rm)
                     {
-                        Name = RoomValidationConstants.KitchenLivingDinning_Name,
+                        Name = RoomValidationConstants.KitchenLivingDinning_Name_1,
                         MinimumArea = validationData.MinimumLivingDinningKitchenArea,
                         MinimumWidth = validationData.MinimumLivingDinningKitchenWidth
                     };
@@ -276,6 +280,7 @@ namespace CWO_App.UI.Models.ApartmentValidation
                 apartment.AddRoom(bdRms[i]);
             }
         }
+
 
         private static void AddValidationData(CWO_Apartment apartment,
             ApartmentValidationData validationData)

@@ -159,6 +159,7 @@ namespace CWO_App.UI.ViewModels.ApartmentValidation
             {
                await _asyncExternalHandler.RaiseAsync((uiApp) => {
 
+
                    _model.SetAreaRoomAssociation();
                    _model.SetApartments();
                    _model.Validate();

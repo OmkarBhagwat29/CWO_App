@@ -8,7 +8,8 @@ namespace CWO_App.UI.Constants
 {
     public class RoomValidationConstants
     {
-        public const string KitchenLivingDinning_Name = "KLD";
+        public const string KitchenLivingDinning_Name_1 = "KLD";
+        public const string KitchenLivingDinning_Name_2 = "Kitchen/Living/Dinning";
         public const string Kitchen_Name = "KITCHEN";
         public const string LivingDinning_Name = "LD";
         public const string StorageRoomName_Name = "STORAGE";

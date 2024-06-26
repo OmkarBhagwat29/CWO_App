@@ -46,7 +46,7 @@ namespace CWO_App.UI.Models.ApartmentValidation
         public void SetAreaRoomAssociation()
         {
             _associations = AreaRoomAssociation
-                    .GetCWOApartmentsInProject(this.UiApp.ActiveUIDocument.Document,
+                    .GetCWOApartmentsInProject(this.UiApp,
             (area) =>
             {
                 if (area.Level == null)

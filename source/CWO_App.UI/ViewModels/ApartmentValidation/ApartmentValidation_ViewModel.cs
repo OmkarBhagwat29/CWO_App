@@ -145,8 +145,15 @@ namespace CWO_App.UI.ViewModels.ApartmentValidation
                 _externalHandler.Raise(uiApp =>
                 {
                     var uiDoc = uiApp.ActiveUIDocument;
+                    var doc = uiDoc.Document;
 
-                    uiDoc.Selection.SetElementIds([validationResult.Element_Id]);
+                    var elm = doc.GetElement(validationResult.Element_Id);
+                    if (elm != null)
+                        uiDoc.Selection.SetElementIds([validationResult.Element_Id]);
+                    else
+                    {
+                        //uiDoc.Selection.
+                    }
                 });
             }
         }

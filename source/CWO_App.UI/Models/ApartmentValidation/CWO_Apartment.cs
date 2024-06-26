@@ -173,77 +173,49 @@ namespace CWO_App.UI.Models.ApartmentValidation
                     continue;
                 var val = param.AsString();
 
-                if (val.Equals(RoomValidationConstants.KitchenLivingDinning_Name_1,
+                if (val.Contains(RoomValidationConstants.KitchenLivingDinning_Name_1,
                     StringComparison.CurrentCultureIgnoreCase) ||
-                    val.Equals(RoomValidationConstants.KitchenLivingDinning_Name_2,
+                    val.Contains(RoomValidationConstants.KitchenLivingDinning_Name_2,
                     StringComparison.CurrentCultureIgnoreCase))
                 {
                     var kld = new KLD(rm)
                     {
-                        Name = RoomValidationConstants.KitchenLivingDinning_Name_1,
+                        Name = val,
                         MinimumArea = validationData.MinimumLivingDinningKitchenArea,
                         MinimumWidth = validationData.MinimumLivingDinningKitchenWidth
                     };
                     apartment.AddRoom(kld);
                 }
-                else if (val.Equals(RoomValidationConstants.StorageRoomName_Name, StringComparison.CurrentCultureIgnoreCase) ||
-                    val.Equals(RoomValidationConstants.StorageRoomName_Name_2,StringComparison.CurrentCultureIgnoreCase) ||
-                    val.Equals(RoomValidationConstants.StorageRoomName_Name_3, StringComparison.CurrentCultureIgnoreCase))
+                else if (val.Contains(RoomValidationConstants.StorageRoomName_Name, StringComparison.CurrentCultureIgnoreCase) ||
+                    val.Contains(RoomValidationConstants.StorageRoomName_Name_2,StringComparison.CurrentCultureIgnoreCase) ||
+                    val.Contains(RoomValidationConstants.StorageRoomName_Name_3, StringComparison.CurrentCultureIgnoreCase))
                 {
                     var storage = new Storage(rm)
                     {
-                        Name = RoomValidationConstants.StorageRoomName_Name,
+                        Name = val,
                         MinimumArea = validationData.MinimumStorageArea
                     };
                     apartment.AddRoom(storage);
                 }
-                else if (val.Equals(RoomValidationConstants.Balcony_Name,
+                else if (val.Contains(RoomValidationConstants.Balcony_Name,
                     StringComparison.CurrentCultureIgnoreCase))
                 {
                     var balcony = new Balcony(rm)
                     {
-                        Name = RoomValidationConstants.Balcony_Name,
+                        Name = val,
                         MinimumArea = validationData.MinimumBalconyArea,
                         MinimumWidth = validationData.MinimumBalconyWidth
                     };
                     apartment.AddRoom(balcony);
                 }
-                else if (val.Equals(RoomValidationConstants.Bedroom_Name,
+                else if (val.Contains(RoomValidationConstants.Bedroom_Name,
                     StringComparison.CurrentCultureIgnoreCase))
                 {
                     var bedroom = new Bedroom(rm)
                     {
-                        Name = RoomValidationConstants.Bedroom_Name,
+                        Name = val,
                     };
 
-                    bdRms.Add(bedroom);
-                }
-                else if (val.Equals(RoomValidationConstants.Bedroom_1_Name,
-                    StringComparison.CurrentCultureIgnoreCase))
-                {
-                    var bedroom = new Bedroom(rm);
-
-                    bedroom.Name = RoomValidationConstants.Bedroom_1_Name;
-
-                    bdRms.Add(bedroom);
-                }
-                else if (val.Equals(RoomValidationConstants.Bedroom_2_Name,
-                    StringComparison.CurrentCultureIgnoreCase))
-                {
-                    var bedroom = new Bedroom(rm)
-                    {
-                        Name = RoomValidationConstants.Bedroom_2_Name,
-                    };
-
-                    bdRms.Add(bedroom);
-                }
-                else if (val.Equals(RoomValidationConstants.Bedroom_3_Name,
-                    StringComparison.CurrentCultureIgnoreCase))
-                {
-                    var bedroom = new Bedroom(rm)
-                    {
-                        Name = RoomValidationConstants.Bedroom_3_Name,
-                    };
                     bdRms.Add(bedroom);
                 }
                 else

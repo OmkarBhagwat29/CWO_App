@@ -17,8 +17,7 @@ namespace CWO_App.UI.Models.ApartmentValidation
 {
     public class CWO_Apartment : Apartment
     {
-        public static double BedroomAreaThreshold;
-        public static double ApartmentAreaThreshold; 
+        public static double BedroomAreaThreshold = 10.5;
         public CWO_Apartment(ApartmentType _type,
         Area areaBoundary)
         {

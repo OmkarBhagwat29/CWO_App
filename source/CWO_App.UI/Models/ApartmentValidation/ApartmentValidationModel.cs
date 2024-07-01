@@ -25,11 +25,12 @@ namespace CWO_App.UI.Models.ApartmentValidation
             Standards = _standards;
             _logger = logger;
 
-            CWO_Apartment.ApartmentAreaThreshold = Standards.GetTwoBedRoomApartmentAreaThreshold();
-            CWO_Apartment.BedroomAreaThreshold = Standards.GetBedroomAreaThreshold();
+            //CWO_Apartment.ApartmentAreaThreshold = Standards.GetTwoBedRoomApartmentAreaThreshold();
+            //CWO_Apartment.BedroomAreaThreshold = Standards.GetBedroomAreaThreshold();
         }
 
         DefinitionFile _definitionFile;
+
 
         private List<AreaRoomAssociation> _associations = [];
 
@@ -117,7 +118,6 @@ namespace CWO_App.UI.Models.ApartmentValidation
                 //apartment validation
                 apt.ApartmentValidationData.ForEach(aV =>
                 {
-
 
                     if (!aV.ValidationSuccess)
                     {

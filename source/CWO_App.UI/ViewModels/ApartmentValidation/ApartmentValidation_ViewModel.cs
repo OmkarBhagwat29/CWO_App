@@ -132,6 +132,8 @@ namespace CWO_App.UI.ViewModels.ApartmentValidation
         [ObservableProperty]private ObservableCollection<ValidationResult> _widthValidationResults = [];
         [ObservableProperty]private ObservableCollection<ValidationResult> _areaValidationResults = [];
 
+        [ObservableProperty] private double _singleDoubleBedThreshold = 10.0;
+
         bool _parametersFound = false;
 
 
@@ -166,7 +168,9 @@ namespace CWO_App.UI.ViewModels.ApartmentValidation
             {
                await _asyncExternalHandler.RaiseAsync((uiApp) => {
 
-
+                   if(!double.IsNaN(this.SingleDoubleBedThreshold))
+                        CWO_Apartment.BedroomAreaThreshold = this.SingleDoubleBedThreshold;
+                   
                    _model.SetAreaRoomAssociation();
                    _model.SetApartments();
                    _model.Validate();

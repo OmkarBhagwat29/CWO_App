@@ -242,13 +242,13 @@ namespace CWO_App.UI.ViewModels
                 float f = this.WallLength;
 
 
-                float brickDim = f % 112.5f;
+                float brickDim = f % 112.5f; //65
                 float minCOMinus = f - brickDim - 10.0f;
                 float minCO = f - brickDim;
                 float minCOPlus = f - brickDim + 10.0f;
-                float maxCOMinus = minCOMinus + 112.5f;
-                float maxCO = minCOMinus + 122.5f;
-                float maxCOPlus = minCOMinus + 132.5f;
+                float maxCOMinus = minCOMinus + 112.5f; //65
+                float maxCO = minCOMinus + 122.5f; //75
+                float maxCOPlus = minCOMinus + 132.5f; //85
 
                 string message;
                 //window.checkResult.Inlines.Clear();

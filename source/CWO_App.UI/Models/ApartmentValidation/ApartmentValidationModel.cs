@@ -268,10 +268,10 @@ namespace CWO_App.UI.Models.ApartmentValidation
 
                                 var message = v.GetValidationReport();
 
+                                StringBuilder sB = new StringBuilder();
+
                                 if (v is AreaValidation aV)
                                 {
-                                    StringBuilder sB = new StringBuilder();
-
                                     string title = $"Apartment Number: {aptNumber}\n" +
                                     $"Room Name: {r.Name}\n" +
                                     $"Room Element ID: {r.Room.Id}\n" +
@@ -291,7 +291,6 @@ namespace CWO_App.UI.Models.ApartmentValidation
 
                                     tempAVs.Add(wR);
                                 }
-
                             }
                         }
 

@@ -124,7 +124,7 @@ namespace CWO_App.UI.Models.ApartmentValidation
 
 
             AddRoomsToApartment(apt, rooms, standards, areaWidthValidationData);
-            AddValidationData(apt, areaWidthValidationData);
+            AddValidationData(apt,standards, areaWidthValidationData);
 
             return apt;
         }
@@ -253,7 +253,7 @@ namespace CWO_App.UI.Models.ApartmentValidation
         }
 
 
-        private static void AddValidationData(CWO_Apartment apartment,
+        private static void AddValidationData(CWO_Apartment apartment, ApartmentStandards standards,
             ApartmentValidationData validationData)
         {
             //apartment area validation
@@ -273,8 +273,10 @@ namespace CWO_App.UI.Models.ApartmentValidation
 
 
             //collect storage and validate with area
-            var storeAreas = apartment.Rooms.Where(r => r is Storage)
-                .Select(r => r.Room.Area.ToUnit(UnitTypeId.SquareMeters))
+            var storages = apartment.Rooms.Where(r => r is Storage)
+                .Select(r => r as Storage).ToList();
+
+            var storeAreas = storages.Select(r => r.Room.Area.ToUnit(UnitTypeId.SquareMeters))
                 .ToList();
             CombinedAreaValidation caV = new(storeAreas, validationData.MinimumStorageArea, typeof(Storage));
             apartment.AddValidationData(caV);
@@ -282,8 +284,18 @@ namespace CWO_App.UI.Models.ApartmentValidation
 
             foreach (var room in apartment.Rooms)
             {
-                if (room is Storage || room is GenericRoom)
+                if (room is GenericRoom)
                     continue;
+
+                if (room is Storage st)
+                {
+                    AreaValidation aGV = new(room.Room.Area.ToUnit(UnitTypeId.SquareMeters),
+                        standards.AdditionalInfo.MaxStoreRoomAreaAllowed, true);
+
+                    room.AddValidationData(aGV);
+
+                    continue;
+                }
 
                 //for KLD add validation data
                 if (room is KLD klD)

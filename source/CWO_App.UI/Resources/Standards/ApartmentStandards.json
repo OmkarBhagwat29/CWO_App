@@ -32,9 +32,8 @@
   },
   "AdditionalInfo": {
 
-    "AdditionalApartmentAreaPercentage": 10.0
-
-
+    "AdditionalApartmentAreaPercentage": 10.0,
+    "MaxStoreRoomAreaAllowed":  3.5
   },
 
   "ApartmentValidationInfo": {

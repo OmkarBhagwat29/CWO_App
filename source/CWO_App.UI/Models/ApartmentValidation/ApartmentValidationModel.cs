@@ -496,7 +496,7 @@ namespace CWO_App.UI.Models.ApartmentValidation
 
                     //This parameter to store whether or not the apartment area is above 10% of the minimum overall floor area required.
                     p = apt.AreaBoundary.LookupParameter(ApartmentValidationConstants.CWO_APARTMENTS_ABOVE_TEN_PERC);
-                    p?.Set(aV.IsGreaterThan(Standards.AdditionalInfo.AdditionalApartmentAreaPercentage).ToString());
+                    p?.Set(aV.IsGreaterThan(Standards.AdditionalInfo.AdditionalApartmentAreaPercentage) ? 1 : 0);
                 }
 
                 //This parameter to store the number of bedrooms in the apartment.

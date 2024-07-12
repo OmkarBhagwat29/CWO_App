@@ -1,15 +1,15 @@
 ﻿
 using Autodesk.Revit.DB.Architecture;
+using Autodesk.Revit.UI;
 using CWO_App.UI.Constants;
 using CWO_App.UI.Requirements;
 using Microsoft.Extensions.Logging;
 using RevitCore.Extensions;
+using RevitCore.Extensions.PointInPoly;
 using RevitCore.ResidentialApartments;
 using RevitCore.ResidentialApartments.Rooms;
 using RevitCore.ResidentialApartments.Validation;
 using System.Runtime.CompilerServices;
-
-
 
 
 
@@ -132,7 +132,7 @@ namespace CWO_App.UI.Models.ApartmentValidation
         
         public static List<CWO_Apartment> CreateApartmentsAndSetApartmentTypeInProject(
             Document doc, ILogger _logger,
-            List<AreaRoomAssociation> associations,
+            List<ApartmentAssociation> associations,
             ApartmentStandards standards)
         {
             List<CWO_Apartment> apts = [];
@@ -316,6 +316,118 @@ namespace CWO_App.UI.Models.ApartmentValidation
 
             }
 
+        }
+
+        public static void AddCategoryAssociationToCWOApartments(UIApplication uiApp,
+            List<CWO_Apartment> apartments, List<BuiltInCategory>categories)
+        {
+            var doc = uiApp.ActiveUIDocument.Document;
+
+            Dictionary<BuiltInCategory,IEnumerable<IGrouping<ElementId, FamilyInstance>>> data = [];
+            foreach (var category in categories)
+            {
+                var elems = doc.GetElements<FamilyInstance>(
+                    (e) =>
+                    {
+                        if (e.LevelId == null)
+                            return false;
+                        return e.Category.BuiltInCategory == category;
+                    })
+                    .GroupBy(e => e.LevelId);
+
+                data.Add(category,elems);
+            }
+
+
+            SpatialElementBoundaryOptions opt = new SpatialElementBoundaryOptions
+            { SpatialElementBoundaryLocation = SpatialElementBoundaryLocation.Center };
+
+            foreach (var dataC in data)
+            {
+                foreach (var apt in apartments)
+                {
+                    IList<IList<BoundarySegment>> boundarySegments = [];
+                    if (dataC.Key == BuiltInCategory.OST_Windows)
+                    {
+                        boundarySegments = apt.AreaBoundary.GetBoundarySegments(opt);
+                    }
+
+                    foreach (var group in dataC.Value)
+                    {
+                        foreach (var fI in group)
+                        {
+                            if (boundarySegments.Count > 0)
+                            {
+                                if (apt.IsElementInside(boundarySegments, fI))
+                                {
+                                    apt.ApartmentElements.Add(fI);
+                                }
+                            }
+                            else
+                            {
+                                if (apt.IsElementInside(fI, opt))
+                                {
+                                    apt.ApartmentElements.Add(fI);
+                                }
+                            }
+                        }
+                    }
+                }
+
+            }
+
+        }
+
+        private bool IsElementInside(IList<IList<BoundarySegment>> areaBoundarySegments,
+            FamilyInstance element,double brickTolerance = 1.64042 ) //brick tolerance in feet
+        {
+            if (element.Location == null)
+                return false;
+
+            var loc = element.Location as LocationPoint;
+
+            if (loc == null) return false;
+
+            double min = double.MaxValue;
+            double requiredDistance = double.MaxValue;
+            foreach (var segments in areaBoundarySegments)
+            {
+                foreach (var seg in segments)
+                {
+                    var cV = seg.GetCurve();
+
+                    if (cV == null)
+                        continue;
+
+                    requiredDistance = cV.Distance(loc.Point);
+
+                    if (requiredDistance < min)
+                    {
+                        min = requiredDistance;
+
+                        if (requiredDistance <= brickTolerance)
+                            return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+
+
+        private bool IsElementInside(FamilyInstance element, SpatialElementBoundaryOptions opt)
+        {
+            if(element.Location == null)
+                return false;
+
+            var loc = element.Location as LocationPoint;
+
+            if(loc == null) return false;
+
+            if (this.AreaBoundary.AreaContains(loc.Point, opt))
+                return true;
+
+            return false;
         }
 
     }

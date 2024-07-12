@@ -40,6 +40,9 @@ namespace CWO_App
 
                 ApartmentValidation_Command.CreateApartmentValidationButton(validationPanel);
 
+                ApartmentParameters_Command.CreateApartmentParametersButton(validationPanel);
+
+
                 CreateKeynotes_Command.CreateKeynotesCreationButton(generalPanel);
 
                 BrickEvaluator_Command.CreateBrickEvaluatorButton(generalPanel);

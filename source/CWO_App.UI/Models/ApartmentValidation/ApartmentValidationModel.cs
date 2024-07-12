@@ -32,7 +32,7 @@ namespace CWO_App.UI.Models.ApartmentValidation
         DefinitionFile _definitionFile;
 
 
-        private List<AreaRoomAssociation> _associations = [];
+        private List<ApartmentAssociation> _associations = [];
 
         public List<CWO_Apartment> Apartments = [];
 
@@ -46,8 +46,8 @@ namespace CWO_App.UI.Models.ApartmentValidation
 
         public void SetAreaRoomAssociation()
         {
-            _associations = AreaRoomAssociation
-                    .GetCWOApartmentsInProject(this.UiApp,
+            _associations = ApartmentAssociation
+                    .GetAreaRoomAssociationInProject(this.UiApp,
             (area) =>
             {
                 if (area.Level == null)
@@ -73,6 +73,12 @@ namespace CWO_App.UI.Models.ApartmentValidation
                                         this.UiApp.ActiveUIDocument.Document,_logger,
                                         _associations, this.Standards);
                             }, "Apartments Created");
+
+            CWO_Apartment.AddCategoryAssociationToCWOApartments(this.UiApp, this.Apartments,
+                [BuiltInCategory.OST_Windows,
+                BuiltInCategory.OST_Doors,
+                BuiltInCategory.OST_Casework,
+                BuiltInCategory.OST_GenericModel]);
         }
 
         public void Validate(bool bakeValidationData = false)

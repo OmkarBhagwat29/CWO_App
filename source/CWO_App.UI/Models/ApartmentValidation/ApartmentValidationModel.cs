@@ -74,11 +74,6 @@ namespace CWO_App.UI.Models.ApartmentValidation
                                         _associations, this.Standards);
                             }, "Apartments Created");
 
-            CWO_Apartment.AddCategoryAssociationToCWOApartments(this.UiApp, this.Apartments,
-                [BuiltInCategory.OST_Windows,
-                BuiltInCategory.OST_Doors,
-                BuiltInCategory.OST_Casework,
-                BuiltInCategory.OST_GenericModel]);
         }
 
         public void Validate(bool bakeValidationData = false)

@@ -331,7 +331,13 @@ namespace CWO_App.UI.Models.ApartmentValidation
                     {
                         if (e.LevelId == null)
                             return false;
-                        return e.Category.BuiltInCategory == category;
+
+#if REVIT2022
+                        return (BuiltInCategory)e.Category.Id.IntegerValue == category;
+#else
+  return e.Category.BuiltInCategory == category;
+#endif
+
                     })
                     .GroupBy(e => e.LevelId);
 

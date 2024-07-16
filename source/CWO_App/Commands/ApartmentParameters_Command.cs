@@ -1,15 +1,14 @@
-﻿
-
-
-
-using Autodesk.Revit.Attributes;
+﻿using Autodesk.Revit.Attributes;
 using Autodesk.Revit.UI;
 using CWO_App.UI.Commands;
-using CWO_App.UI.ViewModels;
 using Nice3point.Revit.Toolkit.External;
 using RevitCore.Utils;
-using RevitCore.Extensions;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace CWO_App.Commands
 {
@@ -18,33 +17,34 @@ namespace CWO_App.Commands
     /// </summary>
     [UsedImplicitly]
     [Transaction(TransactionMode.Manual)]
-    public class BrickEvaluator_Command : ExternalCommand
+    public class ApartmentParameters_Command : ExternalCommand
     {
         public override void Execute()
         {
-			try
-			{
+            try
+            {
                 var app = Application;
                 var uiApp = ExternalCommandData.Application;
                 var uiDoc = uiApp.ActiveUIDocument;
                 var doc = uiDoc.Document;
 
-                Host.GetService<BrickEvaluatorShowWindow>().Execute();
+                Host.GetService<ApartmentParametersShowWindow>().Execute();
+
             }
-			catch
-			{
-                
-			}
+            catch
+            {
+
+            }
         }
 
-        public static void CreateBrickEvaluatorButton(RibbonPanel panel)
+        public static void CreateApartmentParametersButton(RibbonPanel panel)
         {
             var assembly = Assembly.GetExecutingAssembly();
             panel.AddItem(new PushButtonData(MethodBase.GetCurrentMethod().DeclaringType?.Name,
-                $"Brick\nEvaluator", assembly.Location, MethodBase.GetCurrentMethod().DeclaringType?.FullName)
+                $"Apartment\nParameters", assembly.Location, MethodBase.GetCurrentMethod().DeclaringType?.FullName)
             {
-                ToolTip = "Brick Evaluator",
-                LargeImage = ImageUtils.LoadImage(assembly, "BrickCalculator_32x32.png")
+                ToolTip = "Set Apartment Parameters",
+                LargeImage = ImageUtils.LoadImage(assembly, "icon_32x32.png")
             });
 
         }

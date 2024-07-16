@@ -40,8 +40,10 @@ namespace CWO_App.UI.ViewModels.ApartmentValidation
                 if (_standards == null)
                 {
                     TaskDialog.Show("Message", "Unable to read Validation Standard File. Please Check the file!!!");
+                    this._logger.LogError("\"Unable to read Validation Standard File!!!");
                     return;
                 }
+               
 
                 //Validate
                 _externalHandler.Raise((uiApp) => {
@@ -130,6 +132,8 @@ namespace CWO_App.UI.ViewModels.ApartmentValidation
         [ObservableProperty]private ObservableCollection<ValidationResult> _widthValidationResults = [];
         [ObservableProperty]private ObservableCollection<ValidationResult> _areaValidationResults = [];
 
+        [ObservableProperty] private double _singleDoubleBedThreshold = 10.0;
+
         bool _parametersFound = false;
 
 
@@ -143,8 +147,15 @@ namespace CWO_App.UI.ViewModels.ApartmentValidation
                 _externalHandler.Raise(uiApp =>
                 {
                     var uiDoc = uiApp.ActiveUIDocument;
+                    var doc = uiDoc.Document;
 
-                    uiDoc.Selection.SetElementIds([validationResult.Element_Id]);
+                    var elm = doc.GetElement(validationResult.Element_Id);
+                    if (elm != null)
+                        uiDoc.Selection.SetElementIds([validationResult.Element_Id]);
+                    else
+                    {
+                        //uiDoc.Selection.
+                    }
                 });
             }
         }
@@ -157,6 +168,9 @@ namespace CWO_App.UI.ViewModels.ApartmentValidation
             {
                await _asyncExternalHandler.RaiseAsync((uiApp) => {
 
+                   if(!double.IsNaN(this.SingleDoubleBedThreshold))
+                        CWO_Apartment.BedroomAreaThreshold = this.SingleDoubleBedThreshold;
+                   
                    _model.SetAreaRoomAssociation();
                    _model.SetApartments();
                    _model.Validate();

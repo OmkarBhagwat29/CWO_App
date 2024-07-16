@@ -158,5 +158,7 @@ namespace CWO_App.UI.Requirements
     public class MiscellaneousValidationData
     {
         public double AdditionalApartmentAreaPercentage { get; set; }
+
+        public double MaxStoreRoomAreaAllowed { get; set; }
     }
 }

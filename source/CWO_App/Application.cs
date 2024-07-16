@@ -40,9 +40,14 @@ namespace CWO_App
 
                 ApartmentValidation_Command.CreateApartmentValidationButton(validationPanel);
 
+                ApartmentParameters_Command.CreateApartmentParametersButton(validationPanel);
+
+
                 CreateKeynotes_Command.CreateKeynotesCreationButton(generalPanel);
 
-                ACC_Command.LaunchACCButton(accPanel);
+                BrickEvaluator_Command.CreateBrickEvaluatorButton(generalPanel);
+
+                ACC_Command.CreateACCButton(accPanel);
             }
             catch
             {

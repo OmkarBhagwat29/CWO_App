@@ -25,13 +25,14 @@ namespace CWO_App.UI.Models.ApartmentValidation
             Standards = _standards;
             _logger = logger;
 
-            CWO_Apartment.ApartmentAreaThreshold = Standards.GetTwoBedRoomApartmentAreaThreshold();
-            CWO_Apartment.BedroomAreaThreshold = Standards.GetBedroomAreaThreshold();
+            //CWO_Apartment.ApartmentAreaThreshold = Standards.GetTwoBedRoomApartmentAreaThreshold();
+            //CWO_Apartment.BedroomAreaThreshold = Standards.GetBedroomAreaThreshold();
         }
 
         DefinitionFile _definitionFile;
 
-        private List<AreaRoomAssociation> _associations = [];
+
+        private List<ApartmentAssociation> _associations = [];
 
         public List<CWO_Apartment> Apartments = [];
 
@@ -45,8 +46,8 @@ namespace CWO_App.UI.Models.ApartmentValidation
 
         public void SetAreaRoomAssociation()
         {
-            _associations = AreaRoomAssociation
-                    .GetCWOApartmentsInProject(this.UiApp.ActiveUIDocument.Document,
+            _associations = ApartmentAssociation
+                    .GetAreaRoomAssociationInProject(this.UiApp,
             (area) =>
             {
                 if (area.Level == null)
@@ -72,6 +73,7 @@ namespace CWO_App.UI.Models.ApartmentValidation
                                         this.UiApp.ActiveUIDocument.Document,_logger,
                                         _associations, this.Standards);
                             }, "Apartments Created");
+
         }
 
         public void Validate(bool bakeValidationData = false)
@@ -117,7 +119,6 @@ namespace CWO_App.UI.Models.ApartmentValidation
                 //apartment validation
                 apt.ApartmentValidationData.ForEach(aV =>
                 {
-
 
                     if (!aV.ValidationSuccess)
                     {
@@ -268,10 +269,10 @@ namespace CWO_App.UI.Models.ApartmentValidation
 
                                 var message = v.GetValidationReport();
 
+                                StringBuilder sB = new StringBuilder();
+
                                 if (v is AreaValidation aV)
                                 {
-                                    StringBuilder sB = new StringBuilder();
-
                                     string title = $"Apartment Number: {aptNumber}\n" +
                                     $"Room Name: {r.Name}\n" +
                                     $"Room Element ID: {r.Room.Id}\n" +
@@ -291,7 +292,6 @@ namespace CWO_App.UI.Models.ApartmentValidation
 
                                     tempAVs.Add(wR);
                                 }
-
                             }
                         }
 
@@ -491,7 +491,7 @@ namespace CWO_App.UI.Models.ApartmentValidation
 
                     //This parameter to store whether or not the apartment area is above 10% of the minimum overall floor area required.
                     p = apt.AreaBoundary.LookupParameter(ApartmentValidationConstants.CWO_APARTMENTS_ABOVE_TEN_PERC);
-                    p?.Set(aV.IsGreaterThan(Standards.AdditionalInfo.AdditionalApartmentAreaPercentage).ToString());
+                    p?.Set(aV.IsGreaterThan(Standards.AdditionalInfo.AdditionalApartmentAreaPercentage) ? 1 : 0);
                 }
 
                 //This parameter to store the number of bedrooms in the apartment.

@@ -1,9 +1,11 @@
 ﻿
 using Autodesk.Revit.DB.Architecture;
+using Autodesk.Revit.UI;
 using CWO_App.UI.Constants;
 using CWO_App.UI.Requirements;
 using Microsoft.Extensions.Logging;
 using RevitCore.Extensions;
+using RevitCore.Extensions.PointInPoly;
 using RevitCore.ResidentialApartments;
 using RevitCore.ResidentialApartments.Rooms;
 using RevitCore.ResidentialApartments.Validation;
@@ -11,14 +13,11 @@ using System.Runtime.CompilerServices;
 
 
 
-
-
 namespace CWO_App.UI.Models.ApartmentValidation
 {
     public class CWO_Apartment : Apartment
     {
-        public static double BedroomAreaThreshold;
-        public static double ApartmentAreaThreshold; 
+        public static double BedroomAreaThreshold = 10.5;
         public CWO_Apartment(ApartmentType _type,
         Area areaBoundary)
         {
@@ -125,14 +124,15 @@ namespace CWO_App.UI.Models.ApartmentValidation
 
 
             AddRoomsToApartment(apt, rooms, standards, areaWidthValidationData);
-            AddValidationData(apt, areaWidthValidationData);
+            AddValidationData(apt,standards, areaWidthValidationData);
 
             return apt;
         }
 
+        
         public static List<CWO_Apartment> CreateApartmentsAndSetApartmentTypeInProject(
             Document doc, ILogger _logger,
-            List<AreaRoomAssociation> associations,
+            List<ApartmentAssociation> associations,
             ApartmentStandards standards)
         {
             List<CWO_Apartment> apts = [];
@@ -159,6 +159,7 @@ namespace CWO_App.UI.Models.ApartmentValidation
             return apts;
         }
 
+        
         private static void AddRoomsToApartment(CWO_Apartment apartment,
             List<Room> rooms, ApartmentStandards standards,
             ApartmentValidationData validationData)
@@ -171,75 +172,49 @@ namespace CWO_App.UI.Models.ApartmentValidation
                     continue;
                 var val = param.AsString();
 
-                if (val.Equals(RoomValidationConstants.KitchenLivingDinning_Name,
+                if (val.Contains(RoomValidationConstants.KitchenLivingDinning_Name_1,
+                    StringComparison.CurrentCultureIgnoreCase) ||
+                    val.Contains(RoomValidationConstants.KitchenLivingDinning_Name_2,
                     StringComparison.CurrentCultureIgnoreCase))
                 {
                     var kld = new KLD(rm)
                     {
-                        Name = RoomValidationConstants.KitchenLivingDinning_Name,
+                        Name = val,
                         MinimumArea = validationData.MinimumLivingDinningKitchenArea,
                         MinimumWidth = validationData.MinimumLivingDinningKitchenWidth
                     };
                     apartment.AddRoom(kld);
                 }
-                else if (val.Equals(RoomValidationConstants.StorageRoomName_Name, StringComparison.CurrentCultureIgnoreCase) ||
-                    val.Equals(RoomValidationConstants.StorageRoomName_Name_2,StringComparison.CurrentCultureIgnoreCase) ||
-                    val.Equals(RoomValidationConstants.StorageRoomName_Name_3, StringComparison.CurrentCultureIgnoreCase))
+                else if (val.Contains(RoomValidationConstants.StorageRoomName_Name, StringComparison.CurrentCultureIgnoreCase) ||
+                    val.Contains(RoomValidationConstants.StorageRoomName_Name_2,StringComparison.CurrentCultureIgnoreCase) ||
+                    val.Contains(RoomValidationConstants.StorageRoomName_Name_3, StringComparison.CurrentCultureIgnoreCase))
                 {
                     var storage = new Storage(rm)
                     {
-                        Name = RoomValidationConstants.StorageRoomName_Name,
+                        Name = val,
                         MinimumArea = validationData.MinimumStorageArea
                     };
                     apartment.AddRoom(storage);
                 }
-                else if (val.Equals(RoomValidationConstants.Balcony_Name,
+                else if (val.Contains(RoomValidationConstants.Balcony_Name,
                     StringComparison.CurrentCultureIgnoreCase))
                 {
                     var balcony = new Balcony(rm)
                     {
-                        Name = RoomValidationConstants.Balcony_Name,
+                        Name = val,
                         MinimumArea = validationData.MinimumBalconyArea,
                         MinimumWidth = validationData.MinimumBalconyWidth
                     };
                     apartment.AddRoom(balcony);
                 }
-                else if (val.Equals(RoomValidationConstants.Bedroom_Name,
+                else if (val.Contains(RoomValidationConstants.Bedroom_Name,
                     StringComparison.CurrentCultureIgnoreCase))
                 {
                     var bedroom = new Bedroom(rm)
                     {
-                        Name = RoomValidationConstants.Bedroom_Name,
+                        Name = val,
                     };
 
-                    bdRms.Add(bedroom);
-                }
-                else if (val.Equals(RoomValidationConstants.Bedroom_1_Name,
-                    StringComparison.CurrentCultureIgnoreCase))
-                {
-                    var bedroom = new Bedroom(rm);
-
-                    bedroom.Name = RoomValidationConstants.Bedroom_1_Name;
-
-                    bdRms.Add(bedroom);
-                }
-                else if (val.Equals(RoomValidationConstants.Bedroom_2_Name,
-                    StringComparison.CurrentCultureIgnoreCase))
-                {
-                    var bedroom = new Bedroom(rm)
-                    {
-                        Name = RoomValidationConstants.Bedroom_2_Name,
-                    };
-
-                    bdRms.Add(bedroom);
-                }
-                else if (val.Equals(RoomValidationConstants.Bedroom_3_Name,
-                    StringComparison.CurrentCultureIgnoreCase))
-                {
-                    var bedroom = new Bedroom(rm)
-                    {
-                        Name = RoomValidationConstants.Bedroom_3_Name,
-                    };
                     bdRms.Add(bedroom);
                 }
                 else
@@ -277,7 +252,8 @@ namespace CWO_App.UI.Models.ApartmentValidation
             }
         }
 
-        private static void AddValidationData(CWO_Apartment apartment,
+
+        private static void AddValidationData(CWO_Apartment apartment, ApartmentStandards standards,
             ApartmentValidationData validationData)
         {
             //apartment area validation
@@ -297,8 +273,10 @@ namespace CWO_App.UI.Models.ApartmentValidation
 
 
             //collect storage and validate with area
-            var storeAreas = apartment.Rooms.Where(r => r is Storage)
-                .Select(r => r.Room.Area.ToUnit(UnitTypeId.SquareMeters))
+            var storages = apartment.Rooms.Where(r => r is Storage)
+                .Select(r => r as Storage).ToList();
+
+            var storeAreas = storages.Select(r => r.Room.Area.ToUnit(UnitTypeId.SquareMeters))
                 .ToList();
             CombinedAreaValidation caV = new(storeAreas, validationData.MinimumStorageArea, typeof(Storage));
             apartment.AddValidationData(caV);
@@ -306,8 +284,18 @@ namespace CWO_App.UI.Models.ApartmentValidation
 
             foreach (var room in apartment.Rooms)
             {
-                if (room is Storage || room is GenericRoom)
+                if (room is GenericRoom)
                     continue;
+
+                if (room is Storage st)
+                {
+                    AreaValidation aGV = new(room.Room.Area.ToUnit(UnitTypeId.SquareMeters),
+                        standards.AdditionalInfo.MaxStoreRoomAreaAllowed, true);
+
+                    room.AddValidationData(aGV);
+
+                    continue;
+                }
 
                 //for KLD add validation data
                 if (room is KLD klD)
@@ -328,6 +316,118 @@ namespace CWO_App.UI.Models.ApartmentValidation
 
             }
 
+        }
+
+        public static void AddCategoryAssociationToCWOApartments(UIApplication uiApp,
+            List<CWO_Apartment> apartments, List<BuiltInCategory>categories)
+        {
+            var doc = uiApp.ActiveUIDocument.Document;
+
+            Dictionary<BuiltInCategory,IEnumerable<IGrouping<ElementId, FamilyInstance>>> data = [];
+            foreach (var category in categories)
+            {
+                var elems = doc.GetElements<FamilyInstance>(
+                    (e) =>
+                    {
+                        if (e.LevelId == null)
+                            return false;
+                        return e.Category.BuiltInCategory == category;
+                    })
+                    .GroupBy(e => e.LevelId);
+
+                data.Add(category,elems);
+            }
+
+
+            SpatialElementBoundaryOptions opt = new SpatialElementBoundaryOptions
+            { SpatialElementBoundaryLocation = SpatialElementBoundaryLocation.Center };
+
+            foreach (var dataC in data)
+            {
+                foreach (var apt in apartments)
+                {
+                    IList<IList<BoundarySegment>> boundarySegments = [];
+                    if (dataC.Key == BuiltInCategory.OST_Windows)
+                    {
+                        boundarySegments = apt.AreaBoundary.GetBoundarySegments(opt);
+                    }
+
+                    foreach (var group in dataC.Value)
+                    {
+                        foreach (var fI in group)
+                        {
+                            if (boundarySegments.Count > 0)
+                            {
+                                if (apt.IsElementInside(boundarySegments, fI))
+                                {
+                                    apt.ApartmentElements.Add(fI);
+                                }
+                            }
+                            else
+                            {
+                                if (apt.IsElementInside(fI, opt))
+                                {
+                                    apt.ApartmentElements.Add(fI);
+                                }
+                            }
+                        }
+                    }
+                }
+
+            }
+
+        }
+
+        private bool IsElementInside(IList<IList<BoundarySegment>> areaBoundarySegments,
+            FamilyInstance element,double brickTolerance = 1.64042 ) //brick tolerance in feet
+        {
+            if (element.Location == null)
+                return false;
+
+            var loc = element.Location as LocationPoint;
+
+            if (loc == null) return false;
+
+            double min = double.MaxValue;
+            double requiredDistance = double.MaxValue;
+            foreach (var segments in areaBoundarySegments)
+            {
+                foreach (var seg in segments)
+                {
+                    var cV = seg.GetCurve();
+
+                    if (cV == null)
+                        continue;
+
+                    requiredDistance = cV.Distance(loc.Point);
+
+                    if (requiredDistance < min)
+                    {
+                        min = requiredDistance;
+
+                        if (requiredDistance <= brickTolerance)
+                            return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+
+
+        private bool IsElementInside(FamilyInstance element, SpatialElementBoundaryOptions opt)
+        {
+            if(element.Location == null)
+                return false;
+
+            var loc = element.Location as LocationPoint;
+
+            if(loc == null) return false;
+
+            if (this.AreaBoundary.AreaContains(loc.Point, opt))
+                return true;
+
+            return false;
         }
 
     }

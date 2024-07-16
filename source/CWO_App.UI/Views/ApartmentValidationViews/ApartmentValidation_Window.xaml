@@ -31,7 +31,7 @@
 
         <StackPanel Grid.Row="0"
                     Orientation="Horizontal"
-                    HorizontalAlignment="Center"
+                    HorizontalAlignment="Left"
                     VerticalAlignment="Center">
 
             <Button 
@@ -53,6 +53,10 @@
                     Style="{StaticResource CustomButtonStyle}"
                     Command="{Binding SetValidationParametersCommand}">
             </Button>
+
+            <Label FontSize="14" Margin="170,0,0,0" Content="Single/Double Bed Area Threshold:"/>
+            <TextBox FontSize="14" Width="50" Text="{Binding SingleDoubleBedThreshold}"/>
+            <Label FontSize="14" Content="Sqmts"/>
 
         </StackPanel>
 

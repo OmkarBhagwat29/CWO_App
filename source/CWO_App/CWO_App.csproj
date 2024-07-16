@@ -37,6 +37,7 @@
 
 	<ItemGroup>
 	  <None Remove="Resources\Icons\ACC_Hub_32x32.png" />
+	  <None Remove="Resources\Icons\BrickCalculator_32x32.png" />
 	  <None Remove="Resources\Icons\Keynote_32x32.png" />
 	  <None Remove="Resources\Icons\SharedParameters_32x32.png" />
 	  <None Remove="Resources\Icons\SP_16x16.png" />
@@ -54,11 +55,13 @@
 		<PackageReference Include="Serilog.Extensions.Hosting" Version="8.*" Condition="$(RevitVersion) != '' And $(RevitVersion) &lt; '2025'" />
 		<PackageReference Include="Microsoft.Extensions.Hosting" Version="7.*" Condition="$(RevitVersion) == '2025'" />
 		<PackageReference Include="Microsoft.Extensions.Hosting" Version="8.*" Condition="$(RevitVersion) != '' And $(RevitVersion) &lt; '2025'" />
+		<PackageReference Include="Serilog.Sinks.File" Version="5.0.0" />
 	</ItemGroup>
 
 
 	<ItemGroup>
 		<EmbeddedResource Include="Resources\Icons\ACC_Hub_32x32.png" />
+		<EmbeddedResource Include="Resources\Icons\BrickCalculator_32x32.png" />
 		<EmbeddedResource Include="Resources\Icons\icon_32x32.png" />
 		<EmbeddedResource Include="Resources\Icons\Keynote_32x32.png" />
 		<EmbeddedResource Include="Resources\Icons\SharedParameters_32x32.png" />

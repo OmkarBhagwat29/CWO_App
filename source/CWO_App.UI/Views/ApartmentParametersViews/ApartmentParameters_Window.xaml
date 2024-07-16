@@ -1,0 +1,60 @@
+﻿<Window x:Class="CWO_App.UI.Views.ApartmentParametersViews.ApartmentParameters_Window"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:CWO_App.UI.Views.ApartmentParametersViews"
+        mc:Ignorable="d"
+        xmlns:viewModels ="clr-namespace:CWO_App.UI.ViewModels.ApartmentParameters"
+d:DataContext="{d:DesignInstance viewModels:ApartmentParameters_ViewModel}"
+Title="Apartment Parameters"
+ ResizeMode="NoResize"
+Height="750" Width="500">
+
+    <Window.Resources>
+
+        <!-- Merge the resource dictionary containing the custom button style -->
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="../../Styles/ButtonStyles.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+
+        </ResourceDictionary>
+    </Window.Resources>
+    
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="50"/>
+            <RowDefinition/>
+        </Grid.RowDefinitions>
+
+        <StackPanel VerticalAlignment="Center"
+                    HorizontalAlignment="Left">
+
+            <Button 
+                    Margin="20,0,0,0"
+                    BorderThickness="0"
+                    Width="75" Height="30"
+                    Content="Run"
+                    FontSize="14"
+                    Style="{StaticResource CustomButtonStyle}"
+                    Command="{Binding RunCommand}">
+            </Button>
+        </StackPanel>
+
+        <StackPanel Grid.Row="1">
+            <TreeView VerticalAlignment="Top"
+                      x:Name="ApartmentTrv" ItemsSource="{Binding FilteredApartments}">
+                <TreeView.ItemTemplate>
+                    <HierarchicalDataTemplate ItemsSource="{Binding Apartment}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock TextWrapping="Wrap" Text="{Binding Number}"/>
+                            <TextBlock TextWrapping="Wrap" Text="{Binding Id}"/>
+                        </StackPanel>
+                    </HierarchicalDataTemplate>
+                </TreeView.ItemTemplate>
+                
+            </TreeView>
+        </StackPanel>
+    </Grid>
+</Window>

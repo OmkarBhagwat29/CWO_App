@@ -14,9 +14,9 @@ namespace CWO_App.UI.Commands
         public void Execute()
         {
             
-            if (WindowController.Focus<BrickEvaluator_View>()) return;
+            if (WindowController.Focus<BrickWindow>()) return;
 
-            var view = serviceProvider.GetService<BrickEvaluator_View>();
+            var view = serviceProvider.GetService<BrickWindow>();
             WindowController.Show(view, Process.GetCurrentProcess().MainWindowHandle);
         }
     }

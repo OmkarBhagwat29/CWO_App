@@ -129,34 +129,15 @@ namespace CWO_App.UI.Models.ApartmentValidation
             return apt;
         }
 
-        
-        public static List<CWO_Apartment> CreateApartmentsAndSetApartmentTypeInProject(
-            Document doc, ILogger _logger,
-            List<ApartmentAssociation> associations,
-            ApartmentStandards standards)
+        public void SetApartmentTypeParameterInProject(Document doc)
         {
-            List<CWO_Apartment> apts = [];
 
-            foreach (var ass in associations)
-            {
+            var element = doc.GetElement(this.AreaBoundary.Id);
+            //set apartment type
+            var apartmentTypeParam = element.LookupParameter(ApartmentValidationConstants.CWO_APARTMENTS_TYPE);
 
-                var apt = CreateApartment(ass.AreaBoundary, ass.Rooms, standards, _logger);
-
-                if (apt == null)
-                {
-                    continue;
-                }
-
-                var element = doc.GetElement(ass.AreaBoundary.Id);
-                //set apartment type
-                var apartmentTypeParam = element.LookupParameter(ApartmentValidationConstants.CWO_APARTMENTS_TYPE);
-
-                if (apartmentTypeParam != null)
-                    apartmentTypeParam.Set(apt.Name);
-
-                apts.Add(apt);
-            }
-            return apts;
+            if (apartmentTypeParam != null)
+                apartmentTypeParam.Set(this.Name);
         }
 
         

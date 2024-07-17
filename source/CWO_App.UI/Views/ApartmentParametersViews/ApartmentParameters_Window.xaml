@@ -42,19 +42,17 @@ Height="750" Width="500">
             </Button>
         </StackPanel>
 
+
         <StackPanel Grid.Row="1">
-            <TreeView VerticalAlignment="Top"
+            <TreeView VerticalAlignment="Top" Height="675"
                       x:Name="ApartmentTrv" ItemsSource="{Binding FilteredApartments}">
-                <TreeView.ItemTemplate>
-                    <HierarchicalDataTemplate ItemsSource="{Binding Apartment}">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock TextWrapping="Wrap" Text="{Binding Number}"/>
-                            <TextBlock TextWrapping="Wrap" Text="{Binding Id}"/>
-                        </StackPanel>
-                    </HierarchicalDataTemplate>
-                </TreeView.ItemTemplate>
+
+                <HierarchicalDataTemplate>
+                    
+                </HierarchicalDataTemplate>
                 
             </TreeView>
         </StackPanel>
+
     </Grid>
 </Window>

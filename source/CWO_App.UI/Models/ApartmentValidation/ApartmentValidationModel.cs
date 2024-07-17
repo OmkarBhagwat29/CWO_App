@@ -62,18 +62,47 @@ namespace CWO_App.UI.Models.ApartmentValidation
         /// This method also set parameter value
         /// of Apartment Types hence need to call with transaction open
         /// </summary>
-        public void SetApartments()
+        public void SetApartments(bool setApartmentType = true)
         {
-            this.Apartments = this.UiApp
-                            .ActiveUIDocument
-                            .Document.UseTransaction(() =>
-                            {
-                                return CWO_Apartment
-                                        .CreateApartmentsAndSetApartmentTypeInProject(
-                                        this.UiApp.ActiveUIDocument.Document,_logger,
-                                        _associations, this.Standards);
-                            }, "Apartments Created");
+            if (setApartmentType)
+            {
+                UiApp.ActiveUIDocument.Document.UseTransaction(() =>
+                {
+                    foreach (var ass in this._associations)
+                    {
+                        var apt = CWO_Apartment.CreateApartment(ass.AreaBoundary, ass.Rooms, Standards, _logger);
 
+                        if (apt == null)
+                            continue;
+
+                        apt.SetApartmentTypeParameterInProject(UiApp.ActiveUIDocument.Document);
+
+                        this.Apartments.Add(apt);
+                    }
+
+                }, "apartments created");
+            }
+            else
+            {
+                foreach (var ass in this._associations)
+                {
+                    var apt = CWO_Apartment.CreateApartment(ass.AreaBoundary, ass.Rooms, Standards, _logger);
+
+                    if (apt == null)
+                        continue;
+
+                    this.Apartments.Add(apt);
+                }
+            }
+
+
+
+        }
+
+        public void SetApartmentEntities()
+        {
+            CWO_Apartment.AddCategoryAssociationToCWOApartments(this.UiApp, this.Apartments, [BuiltInCategory.OST_Doors, BuiltInCategory.OST_Windows,
+            BuiltInCategory.OST_GenericModel, BuiltInCategory.OST_Casework]);
         }
 
         public void Validate(bool bakeValidationData = false)

@@ -10,7 +10,7 @@ using CWO_App.UI.Utils;
 using CWO_App.UI.Views.ApartmentValidationViews;
 using Autodesk.Revit.DB.Architecture;
 using System.Windows.Input;
-using CWO_App.UI.Constants;
+
 
 //when manual mode is switched on
 

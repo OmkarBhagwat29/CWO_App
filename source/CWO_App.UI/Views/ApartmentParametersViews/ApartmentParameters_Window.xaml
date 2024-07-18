@@ -47,8 +47,11 @@ Height="750" Width="500">
             <TreeView VerticalAlignment="Top" Height="675"
                       x:Name="ApartmentTrv" ItemsSource="{Binding FilteredApartments}">
 
-                <HierarchicalDataTemplate>
-                    
+                <HierarchicalDataTemplate DataType="x:Type viewModels:CategorizedApartmentViewModel"
+                                          ItemsSource="{Binding Children}">
+
+                    <TextBlock Text="{Binding Name}"/>
+
                 </HierarchicalDataTemplate>
                 
             </TreeView>

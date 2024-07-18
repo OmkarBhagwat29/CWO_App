@@ -13,7 +13,7 @@ namespace CWO_App.UI.ViewModels.ApartmentParameters
 
         [ObservableProperty] string _name;
         [ObservableProperty] ElementId _elementId;
-        [ObservableProperty] object _parent = new();
+        [ObservableProperty] object _parent;
         [ObservableProperty] ObservableCollection<CategorizedApartmentViewModel> _children = [];
     }
 }

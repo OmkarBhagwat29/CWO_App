@@ -475,163 +475,171 @@ namespace CWO_App.UI.Models.ApartmentValidation
 
             foreach (var apt in this.Apartments)
             {
-
-                #region Apartment Parameteres
-                //This parameter to store the minimum overall apartment floor area required.
-                var p = apt.AreaBoundary.LookupParameter(ApartmentValidationConstants.CWO_APARTMENTS_MIN_AREA);
-                if (p != null)
+                try
                 {
-                    AreaValidation aV = apt.ApartmentValidationData.Where(v=>v is AreaValidation).FirstOrDefault() as AreaValidation;
-
-                    if (aV != null)
-                    {
-                        double sqFt = aV.RequiredArea.FromUnit(UnitTypeId.SquareMeters); 
-                        bool success = p.Set(sqFt);
-                    }
-
-                    //This parameter to store whether or not the apartment area is above 10% of the minimum overall floor area required.
-                    p = apt.AreaBoundary.LookupParameter(ApartmentValidationConstants.CWO_APARTMENTS_ABOVE_TEN_PERC);
-                    p?.Set(aV.IsGreaterThan(Standards.AdditionalInfo.AdditionalApartmentAreaPercentage) ? 1 : 0);
-                }
-
-                //This parameter to store the number of bedrooms in the apartment.
-                p = apt.AreaBoundary.LookupParameter(ApartmentValidationConstants.CWO_APARTMENTS_BEDS);
-                if (p != null)
-                {
-                    var bedCount = apt.Rooms.Where(r => r is Bedroom).Count();
-
-                    p.Set(bedCount.ToString());
-                }
-
-                //This parameter to store the number of persons in the apartment.
-                p = apt.AreaBoundary.LookupParameter(ApartmentValidationConstants.CWO_APARTMENTS_PERSON);
-                p?.Set(apt.Occupancy.ToString());
-
-                var aG = apt.ApartmentValidationData.FirstOrDefault(v=>v is AggregateAreaValidation) as AggregateAreaValidation;
-
-
-                //This parameter to store the proposed aggregate bedroom floor area of the apartment.
-                p = apt.AreaBoundary.LookupParameter(ApartmentValidationConstants.CWO_APARTMENTS_PROP_BED_AREA);
-                if (p != null && aG != null)
-                {
-                    double sqFt = aG.AchievedAreas.Sum().FromUnit(UnitTypeId.SquareMeters);
-                    
-                    p.Set(sqFt);
-                }
-
-                //This parameter to store the minimum aggregate bedroom floor area required for the apartment.
-                p = apt.AreaBoundary.LookupParameter(ApartmentValidationConstants.CWO_APARTMENTS_MIN_BED_AREA);
-                if (p != null && aG != null)
-                {
-                    double sqFt = aG.RequiredAreas.Sum().FromUnit(UnitTypeId.SquareMeters); 
-
-                    p.Set(sqFt);
-                }
-
-                //This parameter to store the proposed storage space floor area of the apartment.
-                var cvs = apt.ApartmentValidationData.Where(v => v is CombinedAreaValidation).ToList();
-
-                var cV = cvs.Select(c => c as CombinedAreaValidation).FirstOrDefault();
-                p = apt.AreaBoundary.LookupParameter(ApartmentValidationConstants.CWO_APARTMENTS_PROP_STORE_AREA);
-                if (p != null && aG != null)
-                {
-                    double sqFt = cV.CombinedArea.FromUnit(UnitTypeId.SquareMeters);
-
-                    p.Set(sqFt);
-                }
-
-                //This parameter to store the minimum storage space floor area required for the apartment.
-                p = apt.AreaBoundary.LookupParameter(ApartmentValidationConstants.CWO_APARTMENTS_MIN_STORE_AREA);
-                if (p != null && aG != null)
-                {
-                    double sqFt = cV.RequiredArea.FromUnit(UnitTypeId.SquareMeters); 
-                    p.Set(sqFt);
-                }
-
-
-                var aptNumParam = apt.AreaBoundary.LookupParameter(ApartmentValidationConstants.CWO_APARTMENTS_NUMBER);
-
-                #endregion
-
-                #region Room parameters
-
-                foreach (var rm in apt.Rooms)
-                {
-
-                    //This parameter to store the full apartment number where the room is located.
-                    p = rm.Room.LookupParameter(RoomValidationConstants.CWO_ROOMS_APT_NUM);
-
-                    if (aptNumParam != null && p != null)
-                        p.Set(aptNumParam.AsValueString());
-
-                    //This parameter to store the minimum width required for the room.
-                    p = rm.Room.LookupParameter(RoomValidationConstants.CWO_ROOMS_MIN_WIDTH);
-
+                    #region Apartment Parameteres
+                    //This parameter to store the minimum overall apartment floor area required.
+                    var p = apt.AreaBoundary.LookupParameter(ApartmentValidationConstants.CWO_APARTMENTS_MIN_AREA);
                     if (p != null)
                     {
-                        var validation = rm.RoomValidationData.FirstOrDefault(v => v is DimensionValidation);
+                        AreaValidation aV = apt.ApartmentValidationData.Where(v => v is AreaValidation).FirstOrDefault() as AreaValidation;
 
-                        if (validation != null)
+                        if (aV != null)
                         {
-                            var dV = validation as DimensionValidation;
-
-                            //var unt = Math.Round(UnitUtils.Convert(dV.RequireundMinWidth, UnitTypeId.Meters, desiredLengthDisplayUnits),2).ToString();
-                            double fT = dV.RequiredMinWidth.FromUnit(UnitTypeId.Meters);
-
-                            p.Set(fT);
-
-                            //This parameter to store the proposed width of the room.
-                            p = rm.Room.LookupParameter(RoomValidationConstants.CWO_ROOMS_PROP_WIDTH);
-
-                            //unt = Math.Round(UnitUtils.Convert(dV.AchievedMinWidth, UnitTypeId.Meters, desiredLengthDisplayUnits),2).ToString();
-                            fT = dV.AchievedMinWidth.FromUnit(UnitTypeId.Meters); 
-
-                            p?.Set(fT);
+                            double sqFt = aV.RequiredArea.FromUnit(UnitTypeId.SquareMeters);
+                            bool success = p.Set(sqFt);
                         }
+
+                        //This parameter to store whether or not the apartment area is above 10% of the minimum overall floor area required.
+                        p = apt.AreaBoundary.LookupParameter(ApartmentValidationConstants.CWO_APARTMENTS_ABOVE_TEN_PERC);
+                        p?.Set(aV.IsGreaterThan(Standards.AdditionalInfo.AdditionalApartmentAreaPercentage) ? 1 : 0);
                     }
 
-                    //This parameter to store the minimum floor area required for the room.
-                    p = rm.Room.LookupParameter(RoomValidationConstants.CWO_ROOMS_MIN_AREA);
+                    //This parameter to store the number of bedrooms in the apartment.
+                    p = apt.AreaBoundary.LookupParameter(ApartmentValidationConstants.CWO_APARTMENTS_BEDS);
                     if (p != null)
                     {
+                        var bedCount = apt.Rooms.Where(r => r is Bedroom).Count();
 
-                        var validation = rm.RoomValidationData.FirstOrDefault(v => v is AreaValidation);
-
-                        if (validation != null)
-                        {
-                            var areaValidation = validation as AreaValidation;
-
-                            var sF = areaValidation.RequiredArea.FromUnit(UnitTypeId.SquareMeters);
-
-                            p.Set(sF);
-                        }
-
+                        p.Set(bedCount.ToString());
                     }
-                }
 
-                //only bedrooms
-                var aaV = apt.ApartmentValidationData.FirstOrDefault(v => v is AggregateAreaValidation);
+                    //This parameter to store the number of persons in the apartment.
+                    p = apt.AreaBoundary.LookupParameter(ApartmentValidationConstants.CWO_APARTMENTS_PERSON);
+                    p?.Set(apt.Occupancy.ToString());
 
-                if (aaV != null)
-                {
-                    var aggregateValidation = aaV as AggregateAreaValidation;
+                    var aG = apt.ApartmentValidationData.FirstOrDefault(v => v is AggregateAreaValidation) as AggregateAreaValidation;
 
-                    var bedRooms = apt.Rooms.Where(r => r is Bedroom).Select(r => r as Bedroom).ToList();
 
-                    for (int i = 0; i < bedRooms.Count; i++)
+                    //This parameter to store the proposed aggregate bedroom floor area of the apartment.
+                    p = apt.AreaBoundary.LookupParameter(ApartmentValidationConstants.CWO_APARTMENTS_PROP_BED_AREA);
+                    if (p != null && aG != null)
                     {
-                        var bed = bedRooms[i];
+                        double sqFt = aG.AchievedAreas.Sum().FromUnit(UnitTypeId.SquareMeters);
 
-                        p = bed.Room.LookupParameter(RoomValidationConstants.CWO_ROOMS_MIN_AREA);
+                        p.Set(sqFt);
+                    }
+
+                    //This parameter to store the minimum aggregate bedroom floor area required for the apartment.
+                    p = apt.AreaBoundary.LookupParameter(ApartmentValidationConstants.CWO_APARTMENTS_MIN_BED_AREA);
+                    if (p != null && aG != null)
+                    {
+                        double sqFt = aG.RequiredAreas.Sum().FromUnit(UnitTypeId.SquareMeters);
+
+                        p.Set(sqFt);
+                    }
+
+                    //This parameter to store the proposed storage space floor area of the apartment.
+                    var cvs = apt.ApartmentValidationData.Where(v => v is CombinedAreaValidation).ToList();
+
+                    var cV = cvs.Select(c => c as CombinedAreaValidation).FirstOrDefault();
+                    p = apt.AreaBoundary.LookupParameter(ApartmentValidationConstants.CWO_APARTMENTS_PROP_STORE_AREA);
+                    if (p != null && aG != null)
+                    {
+                        double sqFt = cV.CombinedArea.FromUnit(UnitTypeId.SquareMeters);
+
+                        p.Set(sqFt);
+                    }
+
+                    //This parameter to store the minimum storage space floor area required for the apartment.
+                    p = apt.AreaBoundary.LookupParameter(ApartmentValidationConstants.CWO_APARTMENTS_MIN_STORE_AREA);
+                    if (p != null && aG != null)
+                    {
+                        double sqFt = cV.RequiredArea.FromUnit(UnitTypeId.SquareMeters);
+                        p.Set(sqFt);
+                    }
+
+
+                    var aptNumParam = apt.AreaBoundary.LookupParameter(ApartmentValidationConstants.CWO_APARTMENTS_NUMBER);
+
+                    #endregion
+
+                    #region Room parameters
+
+                    foreach (var rm in apt.Rooms)
+                    {
+
+                        //This parameter to store the full apartment number where the room is located.
+                        p = rm.Room.LookupParameter(RoomValidationConstants.CWO_ROOMS_APT_NUM);
+
+                        if (aptNumParam != null && p != null)
+                            p.Set(aptNumParam.AsValueString());
+
+                        //This parameter to store the minimum width required for the room.
+                        p = rm.Room.LookupParameter(RoomValidationConstants.CWO_ROOMS_MIN_WIDTH);
+
                         if (p != null)
                         {
-                            var sF = aggregateValidation.RequiredAreas[i].FromUnit(UnitTypeId.SquareMeters);
-                            p.Set(sF); 
+                            var validation = rm.RoomValidationData.FirstOrDefault(v => v is DimensionValidation);
+
+                            if (validation != null)
+                            {
+                                var dV = validation as DimensionValidation;
+
+                                //var unt = Math.Round(UnitUtils.Convert(dV.RequireundMinWidth, UnitTypeId.Meters, desiredLengthDisplayUnits),2).ToString();
+                                double fT = dV.RequiredMinWidth.FromUnit(UnitTypeId.Meters);
+
+                                p.Set(fT);
+
+                                //This parameter to store the proposed width of the room.
+                                p = rm.Room.LookupParameter(RoomValidationConstants.CWO_ROOMS_PROP_WIDTH);
+
+                                //unt = Math.Round(UnitUtils.Convert(dV.AchievedMinWidth, UnitTypeId.Meters, desiredLengthDisplayUnits),2).ToString();
+                                fT = dV.AchievedMinWidth.FromUnit(UnitTypeId.Meters);
+
+                                p?.Set(fT);
+                            }
+                        }
+
+                        //This parameter to store the minimum floor area required for the room.
+                        p = rm.Room.LookupParameter(RoomValidationConstants.CWO_ROOMS_MIN_AREA);
+                        if (p != null)
+                        {
+
+                            var validation = rm.RoomValidationData.FirstOrDefault(v => v is AreaValidation);
+
+                            if (validation != null)
+                            {
+                                var areaValidation = validation as AreaValidation;
+
+                                var sF = areaValidation.RequiredArea.FromUnit(UnitTypeId.SquareMeters);
+
+                                p.Set(sF);
+                            }
+
                         }
                     }
+
+                    //only bedrooms
+                    var aaV = apt.ApartmentValidationData.FirstOrDefault(v => v is AggregateAreaValidation);
+
+                    if (aaV != null)
+                    {
+                        var aggregateValidation = aaV as AggregateAreaValidation;
+
+                        var bedRooms = apt.Rooms.Where(r => r is Bedroom).Select(r => r as Bedroom).ToList();
+
+                        for (int i = 0; i < bedRooms.Count; i++)
+                        {
+                            var bed = bedRooms[i];
+
+                            p = bed.Room.LookupParameter(RoomValidationConstants.CWO_ROOMS_MIN_AREA);
+                            if (p != null)
+                            {
+                                var sF = aggregateValidation.RequiredAreas[i].FromUnit(UnitTypeId.SquareMeters);
+                                p.Set(sF);
+                            }
+                        }
+                    }
+
+                    #endregion
+                }
+                catch (Exception e)
+                {
+
+                    continue;
                 }
 
-                #endregion
             }
         }
 

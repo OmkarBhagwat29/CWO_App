@@ -1,10 +1,10 @@
 ﻿using Autodesk.Revit.DB.Architecture;
 using Autodesk.Revit.UI;
+using CWO_App.UI.Constants;
 using CWO_App.UI.Models.ApartmentValidation;
 using CWO_App.UI.Requirements;
 using CWO_App.UI.Services;
 using CWO_App.UI.Utils;
-using CWO_App.UI.ViewModels.KeynotesCreationViewModel;
 using CWO_App.UI.Views.ApartmentParametersViews;
 using CWO_App.UI.Views.ApartmentValidationViews;
 using Microsoft.Extensions.Logging;
@@ -31,7 +31,6 @@ namespace CWO_App.UI.ViewModels.ApartmentParameters
 
 
         ApartmentParameters_Window _mainWindow;
-        [ObservableProperty] CategorizedApartmentViewModel _selectedTreeItem;
 
         [ObservableProperty] private ObservableCollection<CategorizedApartmentViewModel> _filteredApartments = [];
 
@@ -49,7 +48,11 @@ namespace CWO_App.UI.ViewModels.ApartmentParameters
         {
             try
             {
-                _mainWindow = (ApartmentParameters_Window)sender;
+                this.FilteredApartments.Clear();
+                
+                var window = WindowController.GetWindow<ApartmentParameters_Window>();
+                _mainWindow = window as ApartmentParameters_Window;
+
                 _standards = ApartmentStandards.LoadFromJson();
                 _externalHandler.Raise(uiApp =>
                 {
@@ -126,8 +129,21 @@ namespace CWO_App.UI.ViewModels.ApartmentParameters
 
             foreach (var apt in _model.Apartments)
             {
+                string aptName = $"Apartment Element ID: {apt.AreaBoundary.Id}";
+                var p = apt.AreaBoundary.LookupParameter(ApartmentValidationConstants.CWO_APARTMENTS_NUMBER);
+
+                if (p!=null)
+                {
+                    var val = p.AsValueString();
+
+                    if (val != string.Empty || val != null)
+                    {
+                        aptName = val;
+                    }
+                }
+
                 CategorizedApartmentViewModel cvMain = new();
-                cvMain.Name = apt.Name;
+                cvMain.Name = $"{aptName}";
                 cvMain.ElementId = apt.AreaBoundary.Id;
                 cvMain.Parent = _mainWindow;
 
@@ -149,10 +165,44 @@ namespace CWO_App.UI.ViewModels.ApartmentParameters
                     cvRoom.Children.Add(cR);
                 });
 
-                
+                this.AddToTree(cvMain, apt, BuiltInCategory.OST_Doors);
+                this.AddToTree(cvMain, apt, BuiltInCategory.OST_Windows);
+                this.AddToTree(cvMain, apt, BuiltInCategory.OST_GenericModel);
+                this.AddToTree(cvMain, apt, BuiltInCategory.OST_Casework);
+
                 this.FilteredApartments.Add(cvMain);
 
             }
+        }
+
+        private void AddToTree(CategorizedApartmentViewModel mainNode,CWO_Apartment apt, BuiltInCategory category)
+        {
+            CategorizedApartmentViewModel c = new();
+            c.Parent = mainNode;
+
+            if (category == BuiltInCategory.OST_Doors)
+                c.Name = "Doors";
+            else if (category == BuiltInCategory.OST_Windows)
+                c.Name = "Windows";
+            else if (category == BuiltInCategory.OST_GenericModel)
+                c.Name = "Generics";
+            else
+                c.Name = "Caseworks";
+
+            var entities = apt.GetSpecificEntities(category);
+
+            entities.ForEach(e => {
+
+                CategorizedApartmentViewModel cE = new CategorizedApartmentViewModel
+                {
+                    Name = $"Family Name: {e.Symbol.Family.Name}\nFamily Type: {e.Symbol.Name}\nElementID: {e.Id}\n",
+                    Parent = c
+                };
+
+                c.Children.Add(cE);
+            });
+
+            mainNode.Children.Add(c);
         }
     }
 }

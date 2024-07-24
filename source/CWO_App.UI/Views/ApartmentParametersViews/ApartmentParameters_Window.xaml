@@ -45,15 +45,15 @@ Height="750" Width="500">
 
         <StackPanel Grid.Row="1">
             <TreeView VerticalAlignment="Top" Height="675"
-                      x:Name="ApartmentTrv" ItemsSource="{Binding FilteredApartments}">
+                      x:Name="ApartmentTrv" ItemsSource="{Binding FilteredApartments}" FontSize="16">
 
-                <HierarchicalDataTemplate DataType="x:Type viewModels:CategorizedApartmentViewModel"
-                                          ItemsSource="{Binding Children}">
+                <TreeView.ItemTemplate>
+                    <HierarchicalDataTemplate DataType="{x:Type viewModels:CategorizedApartmentViewModel}" 
+                                              ItemsSource="{Binding Children}">
+                        <TextBlock Text="{Binding Name}" FontSize="16"/>
+                    </HierarchicalDataTemplate>
+                </TreeView.ItemTemplate>
 
-                    <TextBlock Text="{Binding Name}"/>
-
-                </HierarchicalDataTemplate>
-                
             </TreeView>
         </StackPanel>
 

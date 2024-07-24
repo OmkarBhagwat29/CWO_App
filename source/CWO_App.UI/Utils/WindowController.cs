@@ -80,6 +80,16 @@ public static class WindowController
                 window.Hide();
     }
 
+    public static Window GetWindow<T>() where T : Window 
+    {
+        var type = typeof(T);
+        foreach (var window in Windows)
+            if (window.GetType() == type)
+                return window;
+
+        return null;
+    }
+
     /// <summary>
     ///     Manually closes a <see cref="T:System.Windows.Window" />
     /// </summary>
@@ -104,4 +114,6 @@ public static class WindowController
             Windows.Remove(modelessWindow);
         };
     }
+
+
 }

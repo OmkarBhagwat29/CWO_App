@@ -34,5 +34,16 @@ namespace CWO_App.UI.Views.ApartmentParametersViews
         {
             _windowService.RaiseWindowOpened();
         }
+
+
+        private void ApartmentTrv_SelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
+        {
+            if (sender is TreeView item)
+            {
+                var vm = this.DataContext as ApartmentParameters_ViewModel;
+
+                vm?.ApartmentTrv_SelectedItemChanged(item.SelectedItem);
+            }
+        }
     }
 }

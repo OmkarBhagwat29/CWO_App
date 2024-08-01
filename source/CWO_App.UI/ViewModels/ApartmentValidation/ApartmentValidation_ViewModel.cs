@@ -172,7 +172,7 @@ namespace CWO_App.UI.ViewModels.ApartmentValidation
                         CWO_Apartment.BedroomAreaThreshold = this.SingleDoubleBedThreshold;
                    
                    _model.SetAreaRoomAssociation();
-                   _model.SetApartments();
+                   _model.SetApartments(false);
                    _model.Validate();
 
 

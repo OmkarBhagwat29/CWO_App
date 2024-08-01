@@ -7,10 +7,12 @@ using CWO_App.UI.Services;
 using CWO_App.UI.Utils;
 using CWO_App.UI.Views.ApartmentParametersViews;
 using CWO_App.UI.Views.ApartmentValidationViews;
+using DocumentFormat.OpenXml.Vml;
 using Microsoft.Extensions.Logging;
 using Nice3point.Revit.Toolkit.External.Handlers;
 using RevitCore.Extensions;
 using System.Collections.ObjectModel;
+using System.Windows.Controls;
 
 namespace CWO_App.UI.ViewModels.ApartmentParameters
 {
@@ -33,6 +35,8 @@ namespace CWO_App.UI.ViewModels.ApartmentParameters
         ApartmentParameters_Window _mainWindow;
 
         [ObservableProperty] private ObservableCollection<CategorizedApartmentViewModel> _filteredApartments = [];
+
+        [ObservableProperty] private string _totalApartmentContent = "Apartment Count: ";
 
         public ApartmentParameters_ViewModel(ILogger<ApartmentParameters_ViewModel> logger,
             IWindowService windowService)
@@ -108,11 +112,16 @@ namespace CWO_App.UI.ViewModels.ApartmentParameters
         {
             try
             {
+                this.TotalApartmentContent = "Apartment Count: ";
+
+                _model.Apartments.Clear();
                 _model.SetAreaRoomAssociation();
                 _model.SetApartments(false);
                 _model.SetApartmentEntities();
 
                 this.CreateTreeNodes();
+
+                this.TotalApartmentContent += _model.Apartments.Count;
 
             }
             catch
@@ -121,58 +130,107 @@ namespace CWO_App.UI.ViewModels.ApartmentParameters
             }
         }
 
+        [RelayCommand]
+        private void SetParameters()
+        {
+            try
+            {
+                TaskDialog.Show("Message", "Parameters Set");
+            }
+            catch
+            {
+
+            }
+        }
+
+        public void ApartmentTrv_SelectedItemChanged(object treeItem)
+        {
+            var treeVm = treeItem as CategorizedApartmentViewModel;
+            if (treeVm != null)
+            {
+
+                Task.Run(async () =>
+                {
+                    await _asyncExternalHandler.RaiseAsync(uiApp =>
+                    {
+                        var elm = uiApp.ActiveUIDocument.Document.GetElement(treeVm.ElementId);
+
+                        if (elm != null)
+                        {
+                            uiApp.ActiveUIDocument.Selection.SetElementIds([treeVm.ElementId]);
+                        }
+                    });
+
+                });
+
+            }
+        }
+
 
         private void CreateTreeNodes()
         {
-            //now set tree view here
             this.FilteredApartments.Clear();
 
-            foreach (var apt in _model.Apartments)
+            var apartmentsGroup = _model.Apartments
+                .OrderBy(a => a.AreaBoundary.Level.Elevation)
+                .OrderBy(a => a.ToString())
+                .GroupBy(a => a.AreaBoundary.LevelId).ToList();
+
+            foreach (var aptsG in apartmentsGroup)
             {
-                string aptName = $"Apartment Element ID: {apt.AreaBoundary.Id}";
-                var p = apt.AreaBoundary.LookupParameter(ApartmentValidationConstants.CWO_APARTMENTS_NUMBER);
-
-                if (p!=null)
+                CategorizedApartmentViewModel cvLevel = new CategorizedApartmentViewModel
                 {
-                    var val = p.AsValueString();
+                    ElementId = aptsG.Key,
+                    Parent = _mainWindow,
+                    Children = []
+                };
 
-                    if (val != string.Empty || val != null)
-                    {
-                        aptName = val;
-                    }
+                foreach (var apt in aptsG)
+                {
+                    cvLevel.Name = apt.AreaBoundary.Level.Name;
+
+                    var aptName = apt.ToString();
+
+                    CategorizedApartmentViewModel cvMain = new();
+                    cvMain.Name = $"{aptName}";
+                    cvMain.ElementId = apt.AreaBoundary.Id;
+                    cvMain.Parent = cvLevel;
+                    cvMain.Children = [];
+
+                    // add rooms as a children
+                    CategorizedApartmentViewModel cvRoom = new();
+                    cvRoom.Name = "Rooms";
+                    cvRoom.Parent = cvMain;
+
+                    cvMain.Children.Add(cvRoom);
+
+                    apt.Rooms.ForEach(r => {
+
+                        CategorizedApartmentViewModel cR = new();
+
+                        cR.Name = r.Name;
+                        cR.ElementId = r.Room.Id;
+                        cR.Parent = cvRoom;
+                        cR.Children = [];
+
+                        cvRoom.Children.Add(cR);
+                    });
+
+                    this.AddToTree(cvMain, apt, BuiltInCategory.OST_Doors);
+                    this.AddToTree(cvMain, apt, BuiltInCategory.OST_Windows);
+                    this.AddToTree(cvMain, apt, BuiltInCategory.OST_GenericModel);
+                    this.AddToTree(cvMain, apt, BuiltInCategory.OST_Casework);
+
+
+                    cvLevel.Children.Add(cvMain);
                 }
 
-                CategorizedApartmentViewModel cvMain = new();
-                cvMain.Name = $"{aptName}";
-                cvMain.ElementId = apt.AreaBoundary.Id;
-                cvMain.Parent = _mainWindow;
+                cvLevel.Name += $": ({cvLevel.Children.Count})";
 
-                // add rooms as a children
-                CategorizedApartmentViewModel cvRoom = new();
-                cvRoom.Name = "Rooms";
-                cvRoom.Parent = cvMain;
-
-                cvMain.Children.Add(cvRoom);
-
-                apt.Rooms.ForEach(r => {
-
-                    CategorizedApartmentViewModel cR = new();
-
-                    cR.Name = r.Name;
-                    cR.ElementId = r.Room.Id;
-                    cR.Parent = cvRoom;
-
-                    cvRoom.Children.Add(cR);
-                });
-
-                this.AddToTree(cvMain, apt, BuiltInCategory.OST_Doors);
-                this.AddToTree(cvMain, apt, BuiltInCategory.OST_Windows);
-                this.AddToTree(cvMain, apt, BuiltInCategory.OST_GenericModel);
-                this.AddToTree(cvMain, apt, BuiltInCategory.OST_Casework);
-
-                this.FilteredApartments.Add(cvMain);
-
+                this.FilteredApartments.Add(cvLevel);
             }
+
+
         }
 
         private void AddToTree(CategorizedApartmentViewModel mainNode,CWO_Apartment apt, BuiltInCategory category)
@@ -190,16 +248,19 @@ namespace CWO_App.UI.ViewModels.ApartmentParameters
                 c.Name = "Caseworks";
 
             var entities = apt.GetSpecificEntities(category);
-
+            int i = 1;
             entities.ForEach(e => {
 
                 CategorizedApartmentViewModel cE = new CategorizedApartmentViewModel
                 {
-                    Name = $"Family Name: {e.Symbol.Family.Name}\nFamily Type: {e.Symbol.Name}\nElementID: {e.Id}\n",
-                    Parent = c
+                    Name = $"{i}. Family Name: {e.Symbol.Family.Name}\nFamily Type: {e.Symbol.Name}\nElementID: {e.Id}\n",
+                    Parent = c,
+                    ElementId = e.Id,
+                    Children = []
                 };
 
                 c.Children.Add(cE);
+                i++;
             });
 
             mainNode.Children.Add(c);

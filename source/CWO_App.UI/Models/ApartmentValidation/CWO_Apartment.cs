@@ -1,11 +1,14 @@
 ﻿
 using Autodesk.Revit.DB.Architecture;
+using Autodesk.Revit.DB.Mechanical;
 using Autodesk.Revit.UI;
 using CWO_App.UI.Constants;
 using CWO_App.UI.Requirements;
 using Microsoft.Extensions.Logging;
 using RevitCore.Extensions;
+using RevitCore.Extensions.Filters;
 using RevitCore.Extensions.PointInPoly;
+using RevitCore.GeometryUtils;
 using RevitCore.ResidentialApartments;
 using RevitCore.ResidentialApartments.Rooms;
 using RevitCore.ResidentialApartments.Validation;
@@ -32,6 +35,13 @@ namespace CWO_App.UI.Models.ApartmentValidation
         public static CWO_Apartment CreateApartment(Area areaBoundary, List<Room> rooms,
             ApartmentStandards standards, ILogger _logger)
         {
+            //check if apartment type exists
+            //var typeP = areaBoundary.LookupParameter(ApartmentValidationConstants.CWO_APARTMENTS_TYPE);
+            //if (typeP == null)
+            //    return null;
+
+            //if (typeP.AsValueString() == string.Empty || typeP.AsValueString() == null)
+            //    return null;
 
             var allBedrooms = rooms.Where(r =>
             r.LookupParameter(RoomValidationConstants.RoomName_ParamName).AsString()
@@ -48,7 +58,7 @@ namespace CWO_App.UI.Models.ApartmentValidation
             //this is a studio
             CWO_Apartment apt = null;
             ApartmentValidationData areaWidthValidationData = null;
-            if (allBedrooms.Count == 0 && bathrooms.Count == 1)
+            if (allBedrooms.Count == 0)
             {
                 apt = new(ApartmentType.Studio, areaBoundary) { Name = ApartmentValidationConstants.Studio_Name, Occupancy = 2 };
                 areaWidthValidationData = standards.GetStandardsForApartment(ApartmentType.Studio);
@@ -56,10 +66,12 @@ namespace CWO_App.UI.Models.ApartmentValidation
             else if (allBedrooms.Count() == 1)
             {
 
-                    apt = new(ApartmentType.One_Bedroom_1_Person, areaBoundary) {
-                        Name = ApartmentValidationConstants.OneBedRoomOnePerson_Name,
-                        Occupancy = 2 };
-                    areaWidthValidationData = standards.GetStandardsForApartment(ApartmentType.One_Bedroom_2_Person);
+                apt = new(ApartmentType.One_Bedroom_1_Person, areaBoundary)
+                {
+                    Name = ApartmentValidationConstants.OneBedRoomOnePerson_Name,
+                    Occupancy = 2
+                };
+                areaWidthValidationData = standards.GetStandardsForApartment(ApartmentType.One_Bedroom_2_Person);
 
 
             }
@@ -124,7 +136,7 @@ namespace CWO_App.UI.Models.ApartmentValidation
 
 
             AddRoomsToApartment(apt, rooms, standards, areaWidthValidationData);
-            AddValidationData(apt,standards, areaWidthValidationData);
+            AddValidationData(apt, standards, areaWidthValidationData);
 
             return apt;
         }
@@ -140,7 +152,7 @@ namespace CWO_App.UI.Models.ApartmentValidation
                 apartmentTypeParam.Set(this.Name);
         }
 
-        
+
         private static void AddRoomsToApartment(CWO_Apartment apartment,
             List<Room> rooms, ApartmentStandards standards,
             ApartmentValidationData validationData)
@@ -167,7 +179,7 @@ namespace CWO_App.UI.Models.ApartmentValidation
                     apartment.AddRoom(kld);
                 }
                 else if (val.Contains(RoomValidationConstants.StorageRoomName_Name, StringComparison.CurrentCultureIgnoreCase) ||
-                    val.Contains(RoomValidationConstants.StorageRoomName_Name_2,StringComparison.CurrentCultureIgnoreCase) ||
+                    val.Contains(RoomValidationConstants.StorageRoomName_Name_2, StringComparison.CurrentCultureIgnoreCase) ||
                     val.Contains(RoomValidationConstants.StorageRoomName_Name_3, StringComparison.CurrentCultureIgnoreCase))
                 {
                     var storage = new Storage(rm)
@@ -300,122 +312,142 @@ namespace CWO_App.UI.Models.ApartmentValidation
         }
 
         public static void AddCategoryAssociationToCWOApartments(UIApplication uiApp,
-            List<CWO_Apartment> apartments, List<BuiltInCategory>categories)
+            List<CWO_Apartment> apartments, List<BuiltInCategory> categories)
         {
-            var doc = uiApp.ActiveUIDocument.Document;
+            //var doc = uiApp.ActiveUIDocument.Document;
 
-            Dictionary<BuiltInCategory,IEnumerable<IGrouping<ElementId, FamilyInstance>>> data = [];
-            foreach (var category in categories)
-            {
-                var elems = doc.GetElements<FamilyInstance>(
-                    (e) =>
-                    {
-                        if (e.LevelId == null)
-                            return false;
+            List<FamilyInstance> data = [];
 
-#if REVIT2022
-                        return (BuiltInCategory)e.Category.Id.IntegerValue == category;
-#else
-  return e.Category.BuiltInCategory == category;
-#endif
-
-                    })
-                    .GroupBy(e => e.LevelId);
-
-                data.Add(category,elems);
-            }
-
-
-            SpatialElementBoundaryOptions opt = new SpatialElementBoundaryOptions
-            { SpatialElementBoundaryLocation = SpatialElementBoundaryLocation.Center };
-
-            foreach (var dataC in data)
-            {
-                foreach (var apt in apartments)
+                foreach (Document doc in uiApp.Application.Documents)
                 {
-                    IList<IList<BoundarySegment>> boundarySegments = [];
-                    if (dataC.Key == BuiltInCategory.OST_Windows)
+                var elems = doc.GetMultiCategoryElements(categories, (e) => e is FamilyInstance)
+                     .Cast<FamilyInstance>()
+                     .ToList();
+
+                    if (elems.Count > 0)
                     {
-                        boundarySegments = apt.AreaBoundary.GetBoundarySegments(opt);
+                        data.AddRange(elems);
+                    }
+                }
+
+
+            var instances = new List<FamilyInstance>(data);
+
+            foreach (var apt in apartments)
+            {
+                List<FamilyInstance> toRemove = [];
+                foreach (var fI in instances)
+                {
+#if REVIT2022
+                    var isWindowCategory = (BuiltInCategory)fI.Category.Id.IntegerValue == BuiltInCategory.OST_Windows;
+#else
+                    var isWindowCategory = fI.Category.BuiltInCategory != BuiltInCategory.OST_Windows;
+#endif
+                    if (isWindowCategory)
+                    {
+                        if (apt.AddElement(fI) != null)
+                        {
+                            toRemove.Add(fI);
+                        }
+                    }
+                    else
+                    {
+                        //add windows
+                        if (apt.IsWindowAssociatedToApartment(fI))
+                        {
+                            toRemove.Add(fI);
+
+                            apt.ApartmentElements.Add(fI);
+                        }
                     }
 
-                    foreach (var group in dataC.Value)
+                }
+
+                if (toRemove.Count > 0)
+                {
+                    foreach (var item in toRemove)
                     {
-                        foreach (var fI in group)
+                        var index = instances.IndexOf(item);
+
+                        if (index != -1)
                         {
-                            if (boundarySegments.Count > 0)
-                            {
-                                if (apt.IsElementInside(boundarySegments, fI))
-                                {
-                                    apt.ApartmentElements.Add(fI);
-                                }
-                            }
-                            else
-                            {
-                                if (apt.IsElementInside(fI, opt))
-                                {
-                                    apt.ApartmentElements.Add(fI);
-                                }
-                            }
+                            instances.RemoveAt(index);
                         }
                     }
                 }
-
             }
 
         }
 
-        private bool IsElementInside(IList<IList<BoundarySegment>> areaBoundarySegments,
-            FamilyInstance element,double brickTolerance = 1.64042 ) //brick tolerance in feet
+        public FamilyInstance AddElement(FamilyInstance elm)
         {
-            if (element.Location == null)
-                return false;
-
-            var loc = element.Location as LocationPoint;
-
-            if (loc == null) return false;
-
-            double min = double.MaxValue;
-            double requiredDistance = double.MaxValue;
-            foreach (var segments in areaBoundarySegments)
+            foreach (var room in this.Rooms)
             {
-                foreach (var seg in segments)
+                if (room.IsElementInsideRoom(elm))
                 {
-                    var cV = seg.GetCurve();
-
-                    if (cV == null)
-                        continue;
-
-                    requiredDistance = cV.Distance(loc.Point);
-
-                    if (requiredDistance < min)
-                    {
-                        min = requiredDistance;
-
-                        if (requiredDistance <= brickTolerance)
-                            return true;
-                    }
+                    this.ApartmentElements.Add(elm);
+                    return elm;
                 }
             }
 
-            return false;
+            return null;
         }
 
-
-        private bool IsElementInside(FamilyInstance element, SpatialElementBoundaryOptions opt)
+        public override string ToString()
         {
-            if(element.Location == null)
-                return false;
+            string aptName = $"Apartment Element ID: {this.AreaBoundary.Id}";
 
-            var loc = element.Location as LocationPoint;
+            var p = this.AreaBoundary
+                .LookupParameter(ApartmentValidationConstants.CWO_APARTMENTS_TYPE);
 
-            if(loc == null) return false;
+            if (p != null)
+            {
+                var val = p.AsValueString();
 
-            if (this.AreaBoundary.AreaContains(loc.Point, opt))
-                return true;
+                if (val != string.Empty || val != null)
+                {
+                    aptName = val;
+                }
+            }
 
-            return false;
+            p = this.AreaBoundary
+                .LookupParameter(ApartmentValidationConstants.CWO_APARTMENTS_BLOCK);
+
+            if (p != null)
+            {
+                var val = p.AsValueString();
+                if (val != string.Empty || val != null)
+                {
+                    aptName += "-" + val;
+                }
+            }
+
+            p = this.AreaBoundary
+               .LookupParameter(ApartmentValidationConstants.CWO_APARTMENTS_LEVELS);
+
+            if (p != null)
+            {
+                var val = p.AsValueString();
+                if (val != string.Empty || val != null)
+                {
+                    aptName += val;
+                }
+            }
+
+            p = this.AreaBoundary
+                   .LookupParameter(ApartmentValidationConstants.CWO_APARTMENTS_NUMBER);
+
+            if (p != null)
+            {
+                var val = p.AsValueString();
+                if (val != string.Empty || val != null)
+                {
+                    aptName += "-" + val;
+                }
+            }
+
+            return aptName;
         }
-
     }
 }
+

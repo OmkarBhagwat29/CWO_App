@@ -29,6 +29,10 @@ namespace CWO_App.UI.Constants
 
         public const string CWO_APARTMENTS_ABOVE_TEN_PERC = "CWO_APARTMENTS_ABOVE_TEN_PERC";
 
+        public const string CWO_APARTMENTS_BLOCK = "CWO_APARTMENTS_BLOCK";
+
+        public const string CWO_APARTMENTS_LEVELS = "CWO_APARTMENTS_LEVELS";
+
         public static readonly List<string> RequiredApartmentValidationParamNames = [
 
             CWO_APARTMENTS_MIN_AREA,

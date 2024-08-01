@@ -95,8 +95,6 @@ namespace CWO_App.UI.Models.ApartmentValidation
                 }
             }
 
-
-
         }
 
         public void SetApartmentEntities()

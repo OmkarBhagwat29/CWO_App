@@ -243,7 +243,8 @@
             <TreeView VerticalAlignment="Top"
                     Grid.Row="3"
                     x:Name="keynoteTrv" ItemsSource="{Binding FilteredKeynotes}"
-                      Height="620">
+                      Height="620"
+                      SelectedItemChanged="KeynoteTrv_SelectedItemChanged">
                 <TreeView.Resources>
                     <ContextMenu x:Key="TreeViewItemContextMenu">
                         <MenuItem Header="Copy" Click="CopyMenuItem_Click"/>

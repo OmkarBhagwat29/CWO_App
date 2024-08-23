@@ -95,12 +95,29 @@ namespace CWO_App.UI.ViewModels.KeynotesCreationViewModel
             });
         }
 
+        public void KeynoteTrv_SelectedItemChanged(object keynoteObj)
+        {
+            if (this.SelectedFamily == null)
+                return;
+
+            if (this.FamilyData == null)
+                return;
+
+            if (keynoteObj is CategorizedKeynoteViewModel cVm)
+            {
+               // this.SelectedFamily.KeynoteCode = cVm.Category;
+            }
+        }
+
         public void OnKeynoteDoubleClicked(CategorizedKeynoteViewModel keynote)
         {
             if (this.SelectedFamily == null)
                 return;
 
             if (this.FamilyData == null)
+                return;
+
+            if (keynote.Description.Contains("UNICLASS"))
                 return;
 
             this.SelectedFamily.KeynoteCode = keynote.Category;

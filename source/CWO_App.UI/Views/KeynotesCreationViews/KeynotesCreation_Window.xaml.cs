@@ -1,4 +1,5 @@
 ﻿using CWO_App.UI.Models.Keynotes;
+using CWO_App.UI.ViewModels.ApartmentParameters;
 using CWO_App.UI.ViewModels.KeynotesCreationViewModel;
 using System;
 using System.Collections.Generic;
@@ -49,6 +50,16 @@ namespace CWO_App.UI.Views.KeynotesCreationViews
 
                 // Copy the  string to clipboard
                 Clipboard.SetText($"{category}");
+            }
+        }
+
+        private void KeynoteTrv_SelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
+        {
+            if (sender is TreeView item)
+            {
+                var vm = this.DataContext as KeynotesCreation_ViewModel;
+
+                vm?.KeynoteTrv_SelectedItemChanged(item.SelectedItem);
             }
         }
     }

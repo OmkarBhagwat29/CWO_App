@@ -166,7 +166,7 @@ namespace CWO_App.UI.Models.ApartmentValidation
                             {
                                 if (!aaV.ValidationResults[i])
                                 {
-                                    string bI = $"[{bedRm.Name}: Achieved Area: {Math.Round(aaV.AchievedAreas[i], 2)}," +
+                                    string bI = $"[{bedRm.Name}: Achieved Area: {Math.Round(aaV.AchievedAreas[i], 4)}," +
                                     $" Required Area: {aaV.RequiredAreas[i]}]\n";
 
                                     info += bI;
@@ -198,7 +198,7 @@ namespace CWO_App.UI.Models.ApartmentValidation
 
                             string title = $"Apartment Number: {aptNumber}\n" +
                             $"Apartment Element ID: {apt.AreaBoundary.Id}\n" +
-                            $"Apartment Achieved Area: {Math.Round(areaV.AchievedArea, 2)}\n" +
+                            $"Apartment Achieved Area: {Math.Round(areaV.AchievedArea, 4)}\n" +
                             $"Apartment Required Area: {areaV.RequiredArea}";
 
                             sB.AppendLine(title);
@@ -273,7 +273,7 @@ namespace CWO_App.UI.Models.ApartmentValidation
                                 $"Apartment Number: {aptNumber}\n" +
                                 $"Room Name: {r.Name}\n" +
                                 $"Room Element ID: {r.Room.Id}\n" +
-                                $"Achieved Width: {Math.Round(dV.AchievedMinWidth, 2)}\n" +
+                                $"Achieved Width: {Math.Round(dV.AchievedMinWidth, 4)}\n" +
                                 $"Required Width: {dV.RequiredMinWidth}";
 
                                 sB.AppendLine(tilte);

@@ -27,6 +27,8 @@ namespace CWO_App.UI.ViewModels.ApartmentValidation
             WindowService.WindowOpened += OnWindowOpened;
 
             ItemDoubleClickCommand = new RelayCommand<ValidationResult>(OnItemDoubleClick);
+
+           
         }
 
 
@@ -36,7 +38,9 @@ namespace CWO_App.UI.ViewModels.ApartmentValidation
         {
             try
             {
-               _standards = ApartmentStandards.LoadFromJson();
+
+
+        _standards = ApartmentStandards.LoadFromJson();
                 if (_standards == null)
                 {
                     TaskDialog.Show("Message", "Unable to read Validation Standard File. Please Check the file!!!");
@@ -47,7 +51,6 @@ namespace CWO_App.UI.ViewModels.ApartmentValidation
 
                 //Validate
                 _externalHandler.Raise((uiApp) => {
-
 
                     _model = new ApartmentValidationModel(_logger, uiApp, _standards);
                     var file = uiApp.Application.OpenSharedParameterFile();
@@ -118,14 +121,16 @@ namespace CWO_App.UI.ViewModels.ApartmentValidation
             }
         }
 
+
+
         private readonly ILogger _logger;
         public IWindowService WindowService;
 
         private ApartmentValidationModel _model;
 
-        private readonly ActionEventHandler _externalHandler = new();
-        private readonly AsyncEventHandler _asyncExternalHandler = new();
-        private readonly AsyncEventHandler<ElementId> _asyncIdExternalHandler = new();
+        private ActionEventHandler _externalHandler = new();
+        private AsyncEventHandler _asyncExternalHandler = new();
+        private AsyncEventHandler<ElementId> _asyncIdExternalHandler = new();
 
         private static ApartmentStandards _standards = null;
 
@@ -170,6 +175,8 @@ namespace CWO_App.UI.ViewModels.ApartmentValidation
 
                    if(!double.IsNaN(this.SingleDoubleBedThreshold))
                         CWO_Apartment.BedroomAreaThreshold = this.SingleDoubleBedThreshold;
+
+                   _model.Apartments.Clear();
                    
                    _model.SetAreaRoomAssociation();
                    _model.SetApartments(false);
